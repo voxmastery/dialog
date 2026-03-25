@@ -1,6 +1,6 @@
 {
   "name": "dialog-dev",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Local-first AI-powered log analysis tool with CLI and web dashboard",
   "type": "module",
   "main": "./dist/cli-entry.js",

@@ -184,10 +184,16 @@ function buildErrorQuery(
   return { sql, params };
 }
 
-export function createStorage(dbPath: string): Promise<LogStorage> {
+export function createStorage(dbPath: string, readOnly = false): Promise<LogStorage> {
   return new Promise((resolve, reject) => {
-    const db = new duckdb.Database(dbPath, (err: Error | null) => {
+    const config: Record<string, string> = readOnly ? { access_mode: 'READ_ONLY' } : {};
+    const db = new duckdb.Database(dbPath, config, (err: Error | null) => {
       if (err) {
+        // If lock conflict, retry in read-only mode
+        if (!readOnly && err.message.includes('Could not set lock')) {
+          createStorage(dbPath, true).then(resolve).catch(reject);
+          return;
+        }
         reject(err);
         return;
       }
