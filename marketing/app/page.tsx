@@ -61,12 +61,6 @@ export default function Home() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <button className="relative group hidden sm:block">
-              <div className="absolute inset-0 bg-gradient-to-r from-accent1 to-accent2 rounded-full blur opacity-50 group-hover:opacity-100 transition duration-300" />
-              <div className="relative px-5 py-2 bg-gradient-to-r from-accent1 to-accent2 rounded-full flex items-center text-white text-sm font-medium shadow-lg">
-                Get Started
-              </div>
-            </button>
           </div>
         </div>
       </header>
@@ -156,12 +150,12 @@ export default function Home() {
                   Install Now &rarr;
                 </div>
               </button>
-              <button className="h-12 px-8 rounded-lg border border-white/15 bg-white/[0.02] hover:bg-white/[0.06] text-white font-medium flex items-center justify-center gap-2 transition-all w-full sm:w-auto active:scale-95">
+              <a href="#features" className="h-12 px-8 rounded-lg border border-white/15 bg-white/[0.02] hover:bg-white/[0.06] text-white font-medium flex items-center justify-center gap-2 transition-all w-full sm:w-auto active:scale-95">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
                 </svg>
-                View Dashboard Demo
-              </button>
+                See How It Works
+              </a>
             </div>
 
             {/* Feature badges */}
