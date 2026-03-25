@@ -108,11 +108,11 @@ export default function Home() {
                   {/* Install line */}
                   <div
                     className="flex justify-between items-center group/copy hover:bg-white/[0.02] -mx-2 px-2 py-1 rounded transition-colors cursor-pointer mb-6"
-                    onClick={() => copyToClipboard('npm install -g dialog')}
+                    onClick={() => copyToClipboard('npm install -g dialog-dev')}
                   >
                     <div className="flex gap-3 items-center">
                       <span className="text-indigo-400 select-none">$</span>
-                      <span className="text-white font-medium">npm install -g dialog</span>
+                      <span className="text-white font-medium">npm install -g dialog-dev</span>
                     </div>
                     <button className="text-gray-500 group-hover/copy:text-white transition-colors p-1" aria-label="Copy to clipboard">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -319,7 +319,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">One Install, Two Tools</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                  <code className="text-indigo-300">npm install -g dialog</code> gives you both <code className="text-gray-300">dialog-cli</code> and <code className="text-gray-300">dialog-web</code>. Terminal and browser, your choice.
+                  <code className="text-indigo-300">npm install -g dialog-dev</code> gives you both <code className="text-gray-300">dialog-cli</code> and <code className="text-gray-300">dialog-web</code>. Terminal and browser, your choice.
                 </p>
               </div>
 
@@ -401,7 +401,7 @@ export default function Home() {
                   <svg className="w-6 h-6 text-indigo-400 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded px-3 py-1 font-mono text-xs text-indigo-300 mb-3 inline-block">
-                  $ npm install -g dialog
+                  $ npm install -g dialog-dev
                 </div>
                 <p className="text-sm text-gray-400 max-w-[200px]">One command installs both tools globally.</p>
               </div>
@@ -581,11 +581,11 @@ export default function Home() {
 
                 <div
                   className="bg-black/80 border border-white/[0.08] rounded-2xl p-4 md:p-6 mb-6 w-full max-w-lg flex items-center justify-between shadow-inner group/cmd cursor-pointer hover:border-indigo-500/30 transition-colors"
-                  onClick={() => copyToClipboard('npm install -g dialog')}
+                  onClick={() => copyToClipboard('npm install -g dialog-dev')}
                 >
                   <code className="font-mono text-base md:text-xl text-white flex gap-3">
                     <span className="text-indigo-400 select-none">$</span>
-                    npm install -g dialog
+                    npm install -g dialog-dev
                   </code>
                   <div className="p-2 bg-white/5 rounded-lg text-gray-400 group-hover/cmd:text-white group-hover/cmd:bg-white/10 transition-all">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>

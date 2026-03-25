@@ -1,15 +1,21 @@
 {
-  "name": "dialog",
+  "name": "dialog-dev",
   "version": "0.1.0",
   "description": "Local-first AI-powered log analysis tool with CLI and web dashboard",
   "type": "module",
   "main": "./dist/cli-entry.js",
   "bin": {
-    "dialog-cli": "./dist/cli-entry.js",
-    "dialog-web": "./dist/web-entry.js"
+    "dialog-cli": "dist/cli-entry.js",
+    "dialog-web": "dist/web-entry.js"
   },
+  "files": [
+    "dist/",
+    "dashboard/dist/",
+    "mcp-config.json"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "dev:cli": "tsx src/cli-entry.ts",
     "dev:web": "tsx src/web-entry.ts",
     "test": "vitest run",
