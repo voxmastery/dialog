@@ -1,0 +1,1 @@
+import{e as r,f as t}from"./index-NLeL9-2i.js";function u(e){return r({queryKey:["latency",e],queryFn:()=>t.getLatency(e),refetchInterval:1e4,refetchIntervalInBackground:!1})}function a(e){return r({queryKey:["timeseries",e],queryFn:()=>t.getTimeseries(e),refetchInterval:15e3,refetchIntervalInBackground:!1})}export{a,u};

@@ -53,8 +53,21 @@ export function createWebServer(ctx: WebServerContext) {
   app.get('/api/health', async (_req: Request, res: Response) => {
     try {
       const services = ctx.daemon.getServices();
+
+      // Verify DB connectivity
+      let dbStatus = 'unknown';
+      try {
+        await ctx.storage.queryLogs({ last: '1m', limit: 1 });
+        dbStatus = 'connected';
+      } catch {
+        dbStatus = 'error';
+      }
+
+      // Check AI availability
+      const aiAvailable = ctx.aiRouter ? true : false;
+
       res.json({
-        status: 'ok',
+        status: dbStatus === 'connected' ? 'ok' : 'degraded',
         uptime: process.uptime(),
         services: services.length,
         service_list: services.map(s => ({
@@ -62,10 +75,13 @@ export function createWebServer(ctx: WebServerContext) {
           framework: s.framework,
           status: s.status,
         })),
+        db_status: dbStatus,
+        ai_available: aiAvailable,
+        version: '0.3.0',
       });
     } catch (err) {
-      logger.error({ err, path: '/api/health' }, 'Route error');
-      res.status(500).json({ error: 'Internal server error' });
+      logger.error({ err }, 'Health check failed');
+      res.status(500).json({ status: 'error', error: 'Health check failed' });
     }
   });
 
@@ -73,11 +89,11 @@ export function createWebServer(ctx: WebServerContext) {
   app.get('/api/services', async (_req: Request, res: Response) => {
     try {
       const services = ctx.daemon.getServices();
-      const logs = await ctx.storage.queryLogs({ last: '5m', limit: 10000 });
+      const recentLogs = await ctx.storage.queryLogs({ last: '5m', limit: 1000 });
       const errors = await ctx.storage.queryErrors({ last: '5m', level: 'ERROR' });
 
       const serviceMap = new Map<string, { logCount: number; errorCount: number }>();
-      for (const log of logs) {
+      for (const log of recentLogs) {
         const existing = serviceMap.get(log.service) ?? { logCount: 0, errorCount: 0 };
         serviceMap.set(log.service, { ...existing, logCount: existing.logCount + 1 });
       }
@@ -260,7 +276,7 @@ export function createWebServer(ctx: WebServerContext) {
       const logs = await ctx.storage.queryLogs({
         last: parsed.data.last,
         service: parsed.data.service,
-        limit: 5000,
+        limit: 1000,
       });
 
       const durations = logs

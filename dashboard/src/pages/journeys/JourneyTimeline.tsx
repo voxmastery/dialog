@@ -43,6 +43,7 @@ interface TimelineNodeProps {
 }
 
 function TimelineNode({ event, isRootCause, isAfterError, expandedStack, onToggleStack }: TimelineNodeProps) {
+  const navigate = useNavigate();
   const isError = isErrorEvent(event);
 
   if (isRootCause) {
@@ -97,7 +98,10 @@ function TimelineNode({ event, isRootCause, isAfterError, expandedStack, onToggl
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-3 py-2 bg-indigo-600 rounded-lg text-xs font-medium text-white hover:bg-indigo-500 transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+              <button
+                className="flex items-center gap-2 px-3 py-2 bg-indigo-600 rounded-lg text-xs font-medium text-white hover:bg-indigo-500 transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]"
+                onClick={() => navigate('/assistant')}
+              >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
@@ -234,7 +238,24 @@ export function JourneyTimeline() {
             )}
           </div>
         </div>
-        <button className="text-xs font-medium text-gray-400 hover:text-white transition-colors flex items-center gap-2 mb-1">
+        <button
+          className="text-xs font-medium text-gray-400 hover:text-white transition-colors flex items-center gap-2 mb-1"
+          onClick={async () => {
+            try {
+              const res = await fetch('/api/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'journey', format: 'json', userId }),
+              });
+              const data = await res.json();
+              const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url; a.download = `journey-${userId}.json`; a.click();
+              URL.revokeObjectURL(url);
+            } catch { /* handled */ }
+          }}
+        >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>

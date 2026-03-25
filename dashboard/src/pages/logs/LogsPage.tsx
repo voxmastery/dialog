@@ -103,7 +103,7 @@ export function LogsPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
       {/* Filter Header */}
-      <header className="relative z-10 px-6 py-4 flex items-center justify-between gap-4">
+      <header className="relative z-10 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
         {/* Left filter island: service + level */}
         <div className="filter-island flex items-center bg-[var(--bg-glass)] backdrop-blur-[24px] border border-[rgba(255,255,255,0.06)] rounded-2xl p-1.5 gap-1.5 shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
           {/* Service dropdown */}
@@ -235,7 +235,7 @@ export function LogsPage() {
       <main
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-grow overflow-y-auto overflow-x-hidden px-6 font-mono text-[13px] leading-relaxed pb-20"
+        className="flex-grow overflow-y-auto overflow-x-hidden px-4 md:px-6 font-mono text-[13px] leading-relaxed pb-20"
         style={{ scrollBehavior: 'smooth' }}
       >
         {filteredLogs.map((log, idx) => (
@@ -287,6 +287,7 @@ export function LogsPage() {
           <button
             className="icon-btn w-9 h-9 rounded-full bg-[#16161C] border border-[rgba(255,255,255,0.06)] text-[var(--text-secondary)] flex items-center justify-center cursor-pointer hover:bg-[rgba(255,255,255,0.12)] hover:text-[var(--text-primary)] transition-all"
             title="Jump to Latest"
+            aria-label="Jump to latest"
             onClick={jumpToLatest}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -298,6 +299,7 @@ export function LogsPage() {
           <button
             className="icon-btn w-9 h-9 rounded-full bg-[#16161C] border border-[rgba(255,255,255,0.06)] text-[var(--text-secondary)] flex items-center justify-center cursor-pointer hover:bg-[rgba(255,255,255,0.12)] hover:text-[var(--text-primary)] transition-all"
             title="Clear Logs"
+            aria-label="Clear logs"
             onClick={clear}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -316,6 +318,7 @@ export function LogsPage() {
                 : 'bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.06)] text-[var(--text-primary)]',
             )}
             title={paused ? 'Resume Stream' : 'Pause Stream'}
+            aria-label={paused ? 'Resume stream' : 'Pause stream'}
             onClick={() => setPaused((p) => !p)}
           >
             {paused ? (

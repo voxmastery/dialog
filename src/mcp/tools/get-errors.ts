@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ToolContext } from '../types.js';
 import { createSuccessResponse, createErrorResponse, type ToolResponse } from '../types.js';
-import type { ErrorGroup } from '../../types.js';
+import type { ErrorGroup, LogLevel } from '../../types.js';
 
 export const TOOL_NAME = 'dialog_get_errors';
 export const TOOL_DESCRIPTION = 'Get recent application errors grouped by type with counts, timestamps, and affected endpoints. Use to understand what is breaking in the application.';
@@ -44,7 +44,7 @@ export async function handler(
     const errors = await ctx.storage.queryErrors({
       last: timeRange,
       service: args.service,
-      level: (args.severity as any) ?? 'ERROR',
+      level: (args.severity as LogLevel | undefined) ?? 'ERROR',
     });
 
     const errorGroups: readonly ErrorGroupOutput[] = errors.map(e => ({

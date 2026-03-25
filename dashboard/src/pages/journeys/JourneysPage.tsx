@@ -144,10 +144,16 @@ export function JourneysPage() {
 
         {/* Action buttons */}
         <div className="mt-12 flex gap-4">
-          <button className="px-5 py-2.5 text-sm font-medium bg-indigo-600 border border-indigo-500 rounded-lg text-white hover:bg-indigo-500 transition-all shadow-[0_0_20px_rgba(79,70,229,0.2)]">
+          <button
+            className="px-5 py-2.5 text-sm font-medium bg-indigo-600 border border-indigo-500 rounded-lg text-white hover:bg-indigo-500 transition-all shadow-[0_0_20px_rgba(79,70,229,0.2)]"
+            onClick={() => window.open('https://github.com/voxmastery/dialog#user-identifiers', '_blank')}
+          >
             Configure Identifiers
           </button>
-          <button className="px-5 py-2.5 text-sm font-medium bg-white/[0.05] border border-white/10 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-colors">
+          <button
+            className="px-5 py-2.5 text-sm font-medium bg-white/[0.05] border border-white/10 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+            onClick={() => window.open('https://github.com/voxmastery/dialog#readme', '_blank')}
+          >
             Read Documentation
           </button>
         </div>

@@ -1,0 +1,1 @@
+import{j as d,d as e}from"./index-NLeL9-2i.js";function u({children:s,className:r,hover:a=!0,onClick:t}){return d.jsx("div",{className:e("glass-card rounded-xl p-6",a&&"cursor-default",r),onClick:t,children:s})}export{u as G};

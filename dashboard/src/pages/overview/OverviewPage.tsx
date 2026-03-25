@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useHealth } from '@/hooks/useHealth';
 import { useServices } from '@/hooks/useServices';
@@ -10,6 +11,7 @@ import type { ErrorGroup, ServiceInfo } from '@/lib/types';
 type TimeRange = 'Last 60m' | 'Last 24h';
 
 export function OverviewPage() {
+  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState<TimeRange>('Last 60m');
   const { data: health } = useHealth();
   const { data: servicesData } = useServices();
@@ -62,7 +64,7 @@ export function OverviewPage() {
             </svg>
             Last 1 Hour
           </button>
-          <button className="px-3 py-1.5 text-xs font-medium bg-indigo-600 border border-indigo-500 rounded-md text-white hover:bg-indigo-500 transition-colors flex items-center gap-1.5 shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+          <button className="px-3 py-1.5 text-xs font-medium bg-indigo-600 border border-indigo-500 rounded-md text-white hover:bg-indigo-500 transition-colors flex items-center gap-1.5 shadow-[0_0_15px_rgba(79,70,229,0.3)]" aria-label="Refresh data">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -163,7 +165,7 @@ export function OverviewPage() {
             </div>
           </div>
           <div className="mt-4 flex items-end gap-3">
-            <span className="text-4xl font-semibold text-white tracking-tight">--</span>
+            <span className="text-4xl font-semibold text-white tracking-tight">0</span>
             <div className="flex items-center gap-1 mb-1.5">
               <span className="text-xs font-medium text-gray-500">Currently active</span>
             </div>
@@ -256,7 +258,7 @@ export function OverviewPage() {
               </svg>
               Top Errors
             </h2>
-            <button className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
+            <button className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium" onClick={() => navigate('/logs')}>
               View Logs &rarr;
             </button>
           </div>

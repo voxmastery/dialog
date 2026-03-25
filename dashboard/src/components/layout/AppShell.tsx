@@ -8,7 +8,7 @@ export function AppShell() {
     <div className="min-h-screen relative font-sans antialiased">
       <AmbientGlow />
       <Header />
-      <main className="max-w-[1440px] mx-auto px-6 py-6">
+      <main id="main-content" className="max-w-[1440px] mx-auto px-4 md:px-6 py-6">
         <ErrorBoundary>
           <Outlet />
         </ErrorBoundary>

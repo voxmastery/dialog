@@ -46,7 +46,7 @@ function runAsync(conn: duckdb.Connection, sql: string, params: unknown[] = []):
 
 function allAsync<T>(conn: duckdb.Connection, sql: string, params: unknown[] = []): Promise<T[]> {
   return new Promise((resolve, reject) => {
-    const cb = (err: Error | null, rows: any[]) => {
+    const cb = (err: Error | null, rows: unknown[]) => {
       if (err) reject(err);
       else resolve((rows ?? []) as T[]);
     };
@@ -105,67 +105,39 @@ function rowToEntry(row: Record<string, unknown>): ParsedLogEntry {
 function buildFilteredQuery(
   filters: QueryFilters,
 ): { readonly sql: string; readonly params: unknown[] } {
-  const clauses: string[] = [];
-  const params: unknown[] = [];
+  const parts: readonly { readonly clause: string; readonly param: unknown }[] = [
+    ...(filters.last
+      ? [{ clause: 'timestamp >= ?', param: new Date(Date.now() - parseDuration(filters.last)).toISOString() }]
+      : []),
+    ...(filters.service ? [{ clause: 'service = ?', param: filters.service }] : []),
+    ...(filters.level ? [{ clause: 'level = ?', param: filters.level }] : []),
+    ...(filters.path ? [{ clause: 'path = ?', param: filters.path }] : []),
+    ...(filters.grep ? [{ clause: 'message LIKE ?', param: `%${filters.grep}%` }] : []),
+  ];
 
-  if (filters.last) {
-    const ms = parseDuration(filters.last);
-    const cutoff = new Date(Date.now() - ms).toISOString();
-    clauses.push('timestamp >= ?');
-    params.push(cutoff);
-  }
-
-  if (filters.service) {
-    clauses.push('service = ?');
-    params.push(filters.service);
-  }
-
-  if (filters.level) {
-    clauses.push('level = ?');
-    params.push(filters.level);
-  }
-
-  if (filters.path) {
-    clauses.push('path = ?');
-    params.push(filters.path);
-  }
-
-  if (filters.grep) {
-    clauses.push('message LIKE ?');
-    params.push(`%${filters.grep}%`);
-  }
-
-  const whereClause = clauses.length > 0
-    ? clauses.map((c) => ` AND ${c}`).join('')
+  const whereClause = parts.length > 0
+    ? parts.map((p) => ` AND ${p.clause}`).join('')
     : '';
 
   const limit = filters.limit ?? 100;
 
   return {
     sql: `${QUERY_LOGS}${whereClause} ORDER BY timestamp DESC LIMIT ?`,
-    params: [...params, limit],
+    params: [...parts.map((p) => p.param), limit],
   };
 }
 
 function buildErrorQuery(
   filters: QueryFilters,
 ): { readonly sql: string; readonly params: unknown[] } {
-  const clauses: string[] = [];
-  const params: unknown[] = [];
+  const parts: readonly { readonly clause: string; readonly param: unknown }[] = [
+    ...(filters.last
+      ? [{ clause: 'AND timestamp >= ?', param: new Date(Date.now() - parseDuration(filters.last)).toISOString() }]
+      : []),
+    ...(filters.service ? [{ clause: 'AND service = ?', param: filters.service }] : []),
+  ];
 
-  if (filters.last) {
-    const ms = parseDuration(filters.last);
-    const cutoff = new Date(Date.now() - ms).toISOString();
-    clauses.push('AND timestamp >= ?');
-    params.push(cutoff);
-  }
-
-  if (filters.service) {
-    clauses.push('AND service = ?');
-    params.push(filters.service);
-  }
-
-  const extraWhere = clauses.join(' ');
+  const extraWhere = parts.map((p) => p.clause).join(' ');
 
   const sql = `
     SELECT
@@ -181,7 +153,7 @@ function buildErrorQuery(
     ORDER BY count DESC
   `;
 
-  return { sql, params };
+  return { sql, params: parts.map((p) => p.param) };
 }
 
 export function createStorage(dbPath: string, readOnly = false): Promise<LogStorage> {

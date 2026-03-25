@@ -123,7 +123,7 @@ export function createMcpServer(ctx: ToolContext) {
     listServices.TOOL_DESCRIPTION,
     listServices.inputSchema,
     async (args) => {
-      const response = await listServices.handler(args as any, ctx);
+      const response = await listServices.handler(args as Record<string, never>, ctx);
       return { content: toMcpContent(response) };
     }
   );

@@ -3,6 +3,8 @@ import { join } from 'node:path';
 import { getDataDir, ensureDirectories, loadConfig } from '../../config/index.js';
 import { DUCKDB_FILE, SQLITE_FILE } from '../../config/defaults.js';
 import { isWebRunning } from '../api-proxy.js';
+import type { LogStorage } from '../../storage/duckdb.js';
+import type { JourneyIndex } from '../../journey/index.js';
 
 export function registerMcpServeCommand(program: Command): void {
   program
@@ -24,8 +26,8 @@ export function registerMcpServeCommand(program: Command): void {
         const { createMcpServer } = await import('../../mcp/server.js');
 
         const webRunning = await isWebRunning();
-        let storage: any;
-        let journeyIndex: any;
+        let storage: LogStorage;
+        let journeyIndex: JourneyIndex;
 
         if (webRunning) {
           log('Using dialog-web API (proxy mode)');

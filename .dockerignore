@@ -1,0 +1,11 @@
+node_modules
+.git
+.env
+coverage
+marketing
+demo
+test
+src
+dashboard/src
+dashboard/node_modules
+*.md

@@ -150,6 +150,10 @@ export function createLogInterceptor(): LogInterceptor {
   };
 
   emitter.detachAll = function detachAll(): void {
+    // Flush all pending buffers first
+    for (const [port, entry] of attached) {
+      flushBuffer(entry.service);
+    }
     for (const [port] of attached) {
       emitter.detach(port);
     }

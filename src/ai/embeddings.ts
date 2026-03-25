@@ -15,18 +15,45 @@ export interface SemanticResult {
   readonly metadata: Record<string, string>;
 }
 
+/** Minimal interface for a ChromaDB collection (avoids importing chromadb types at compile time). */
+interface ChromaCollection {
+  add(params: {
+    ids: readonly string[];
+    embeddings: number[][];
+    documents: readonly string[];
+    metadatas: readonly Record<string, string>[];
+  }): Promise<void>;
+  query(params: {
+    queryEmbeddings: number[][];
+    nResults: number;
+  }): Promise<{
+    ids: string[][];
+    documents?: (string | null)[][];
+    distances?: number[][];
+    metadatas?: (Record<string, string> | null)[][];
+  }>;
+}
+
+/** Minimal interface for a ChromaDB client. */
+interface ChromaClientLike {
+  getOrCreateCollection(params: {
+    name: string;
+    metadata: Record<string, string>;
+  }): Promise<ChromaCollection>;
+}
+
 export function createEmbeddingStore(
   mistralClient: MistralClient,
   chromaUrl?: string
 ): EmbeddingStore {
-  let collection: any = null;
-  let chromaClient: any = null;
+  let collection: ChromaCollection | null = null;
+  let chromaClient: ChromaClientLike | null = null;
 
   return {
     async init(): Promise<void> {
       try {
         const { ChromaClient } = await import('chromadb');
-        chromaClient = new ChromaClient({ path: chromaUrl ?? 'http://localhost:8000' });
+        chromaClient = new ChromaClient({ path: chromaUrl ?? 'http://localhost:8000' }) as ChromaClientLike;
         collection = await chromaClient.getOrCreateCollection({
           name: 'dialog_logs',
           metadata: { 'hnsw:space': 'cosine' },

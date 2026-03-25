@@ -30,7 +30,10 @@ function ErrorListItem({ group, isSelected, onSelect }: ErrorListItemProps) {
         'glass-card p-4 rounded-xl cursor-pointer group',
         isSelected && 'bg-indigo-500/[0.04] border-indigo-500/20',
       )}
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(); }}
     >
       <div className="flex justify-between items-start mb-2">
         <span className={cn('text-[10px] font-mono px-1.5 py-0.5 rounded border', severityClass)}>
@@ -262,9 +265,9 @@ function AiDiagnostic({ answer, isLoading, onExplain }: AiDiagnosticProps) {
 /* ------------------------------------------------------------------ */
 
 function OccurrenceChart({ count }: { readonly count: number }) {
-  // Generate a simple distribution visualization based on count
-  const bars = Array.from({ length: 10 }, (_, i) => {
-    const base = Math.random() * 0.6 + 0.1;
+  // Deterministic distribution visualization based on count
+  const heights = [0.3, 0.5, 0.7, 0.4, 0.8, 0.6, 0.9, 0.5, 0.3, 0.7];
+  const bars = heights.map((base) => {
     const height = Math.max(8, Math.round(base * 128 * (count / 50)));
     const capped = Math.min(height, 128);
     const intensity = capped / 128;
@@ -393,7 +396,25 @@ function ErrorDetail({ group }: ErrorDetailProps) {
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'errors', format: 'md' }),
+                  });
+                  const data = await res.json();
+                  const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'text/markdown' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url; a.download = 'errors-report.md'; a.click();
+                  URL.revokeObjectURL(url);
+                } catch { /* handled */ }
+              }}
+            >
               Export as Markdown
             </Button>
             <button
@@ -465,9 +486,12 @@ export function ErrorsPage() {
   const selectedGroup = selectedIndex !== null ? errors[selectedIndex] ?? null : null;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden -mx-6 -my-6">
-      {/* Sidebar: error list */}
-      <aside className="w-96 border-r border-white/[0.06] bg-[#0A0A0F]/40 flex flex-col shrink-0">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden -mx-4 md:-mx-6 -my-6">
+      {/* Sidebar: error list — hidden on mobile when an error is selected */}
+      <aside className={cn(
+        'w-full md:w-96 border-r border-white/[0.06] bg-[#0A0A0F]/40 flex flex-col shrink-0',
+        selectedGroup !== null && 'hidden md:flex',
+      )}>
         <div className="p-4 border-b border-white/[0.06] flex items-center justify-between bg-white/[0.01]">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Recent Issues</h2>
           <span className="text-[10px] text-gray-500 font-mono bg-white/5 px-1.5 py-0.5 rounded">
@@ -509,8 +533,22 @@ export function ErrorsPage() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main content — hidden on mobile when no error selected */}
+      <div className={cn(
+        'flex-1 flex flex-col overflow-hidden',
+        selectedGroup === null && 'hidden md:flex',
+      )}>
+        {selectedGroup && (
+          <button
+            className="md:hidden flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-400 hover:text-white border-b border-white/[0.06] bg-white/[0.01]"
+            onClick={() => setSelectedIndex(null)}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to errors
+          </button>
+        )}
         {selectedGroup ? <ErrorDetail group={selectedGroup} /> : <EmptyDetail />}
       </div>
     </div>
