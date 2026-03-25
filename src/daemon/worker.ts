@@ -4,6 +4,7 @@ import { createDaemon } from './index.js';
 import { createAlertDispatcher } from '../alerts/index.js';
 import { DUCKDB_FILE, SQLITE_FILE } from '../config/defaults.js';
 import { join } from 'node:path';
+import { logger } from '../lib/logger.js';
 
 async function main(): Promise<void> {
   ensureDirectories();
@@ -28,7 +29,7 @@ async function main(): Promise<void> {
   // Wire up log pipeline
   daemon.onLog((entry) => {
     // Store in DuckDB
-    storage.insertLog(entry).catch(() => {});
+    storage.insertLog(entry).catch(err => logger.error({ err, service: entry.service }, 'Failed to insert log'));
 
     // Index journey
     journeyIndex.indexEvent(entry);
@@ -54,7 +55,7 @@ async function main(): Promise<void> {
   // Keep alive
   setInterval(() => {
     // Periodic retention cleanup
-    storage.cleanupOldLogs(config.retention_hours).catch(() => {});
+    storage.cleanupOldLogs(config.retention_hours).catch(err => logger.error({ err }, 'Log cleanup failed'));
   }, 3600000); // Every hour
 }
 

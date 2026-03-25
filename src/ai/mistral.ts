@@ -1,5 +1,6 @@
 import { Mistral } from '@mistralai/mistralai';
 import { SYSTEM_PROMPT, SQL_GENERATION_PROMPT } from './prompts.js';
+import { logger } from '../lib/logger.js';
 
 const MISTRAL_API_KEY = process.env['DIALOG_MISTRAL_KEY'] ?? process.env['MISTRAL_API_KEY'] ?? '';
 
@@ -116,7 +117,8 @@ export function createMistralClient(): MistralClient {
         }
 
         return cleaned;
-      } catch {
+      } catch (err) {
+        logger.debug({ err }, 'Mistral SQL generation failed');
         return null;
       }
     },
@@ -133,7 +135,8 @@ export function createMistralClient(): MistralClient {
         );
 
         return result.data.map(d => d.embedding as number[]);
-      } catch {
+      } catch (err) {
+        logger.debug({ err, textCount: texts.length }, 'Mistral embedding failed');
         return [];
       }
     },

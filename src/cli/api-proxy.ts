@@ -2,6 +2,7 @@
  * When dialog-web is running, CLI commands proxy through the HTTP API
  * instead of opening DuckDB directly (avoids lock conflicts).
  */
+import { logger } from '../lib/logger.js';
 
 const DEFAULT_PORT = 9999;
 
@@ -9,7 +10,8 @@ export async function isWebRunning(port: number = DEFAULT_PORT): Promise<boolean
   try {
     const res = await fetch(`http://localhost:${port}/api/health`, { signal: AbortSignal.timeout(1000) });
     return res.ok;
-  } catch {
+  } catch (err) {
+    logger.debug({ err, port }, 'Web health check failed');
     return false;
   }
 }

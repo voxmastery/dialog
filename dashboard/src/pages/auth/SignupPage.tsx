@@ -58,7 +58,6 @@ export function SignupPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Signup attempt:', { fullName, email, password });
   };
 
   return (

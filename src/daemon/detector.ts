@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import { EventEmitter } from 'node:events';
 import type { DetectedService } from '../types.js';
 import { identifyFramework } from './frameworks.js';
+import { logger } from '../lib/logger.js';
 
 const execAsync = promisify(exec);
 
@@ -34,7 +35,8 @@ export async function scanPort(port: number): Promise<DetectedService | null> {
       command,
       status: 'active',
     };
-  } catch {
+  } catch (err) {
+    logger.debug({ err, port }, 'Port scan found no service');
     return null;
   }
 }
@@ -82,8 +84,8 @@ export function createPeriodicScanner(
       }
 
       knownServices = currentByPort;
-    } catch {
-      // Scan errors are non-fatal; next interval will retry
+    } catch (err) {
+      logger.debug({ err }, 'Periodic port scan failed, will retry next interval');
     }
   };
 

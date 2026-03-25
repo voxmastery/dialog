@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import chalk from 'chalk';
 import { getDialogHome } from '../../config/index.js';
+import { logger } from '../../lib/logger.js';
 
 const WEB_PID_FILE = 'dialog-web.pid';
 
@@ -26,7 +27,8 @@ export function registerWebStatusCommand(program: Command): void {
         console.log(chalk.dim('  Dashboard: http://localhost:9999'));
         console.log(chalk.dim('  API:       http://localhost:9999/api/health'));
         console.log(chalk.dim('  Live logs: ws://localhost:9999/api/logs/live'));
-      } catch {
+      } catch (err) {
+        logger.debug({ err }, 'Web process not running');
         console.log(chalk.yellow('○ Dialog Web is not running (stale PID file)'));
       }
     });

@@ -3,6 +3,7 @@ import { createReadStream, existsSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { EventEmitter } from 'node:events';
 import type { DetectedService, ParsedLogEntry } from '../types.js';
+import { logger } from '../lib/logger.js';
 
 export interface LogInterceptor extends EventEmitter {
   attach(service: DetectedService): void;
@@ -74,7 +75,8 @@ export function createLogInterceptor(): LogInterceptor {
         rl.close();
         stream.destroy();
       };
-    } catch {
+    } catch (err) {
+      logger.debug({ err, port: service.port, pid: service.pid }, 'Failed to attach via /proc/fd');
       return null;
     }
   }
@@ -113,7 +115,8 @@ export function createLogInterceptor(): LogInterceptor {
         strace.kill();
         rl.close();
       };
-    } catch {
+    } catch (err) {
+      logger.debug({ err, port: service.port, pid: service.pid }, 'Failed to attach via strace');
       return null;
     }
   }

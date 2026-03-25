@@ -1,5 +1,6 @@
 import { type Command } from 'commander';
 import chalk from 'chalk';
+import { logger } from '../../lib/logger.js';
 
 export function registerAttachCommand(program: Command): void {
   program
@@ -40,7 +41,8 @@ export function registerAttachCommand(program: Command): void {
           console.log(chalk.green(`Connected to container: ${options.docker}`));
           console.log(chalk.dim('Recent logs:'));
           console.log(stdout);
-        } catch {
+        } catch (err) {
+          logger.debug({ err, container: options.docker }, 'Docker attach failed');
           console.log(chalk.red(`Failed to connect to Docker container: ${options.docker}`));
           console.log(chalk.dim('Make sure Docker is running and the container exists.'));
         }

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { SYSTEM_PROMPT, SQL_GENERATION_PROMPT } from './prompts.js';
+import { logger } from '../lib/logger.js';
 
 const GEMINI_API_KEY = process.env['GEMINI_API_KEY'] ?? '';
 
@@ -94,7 +95,8 @@ export function createGeminiClient(): GeminiClient {
           return null;
         }
         return cleaned;
-      } catch {
+      } catch (err) {
+        logger.debug({ err }, 'Gemini SQL generation failed');
         return null;
       }
     },
@@ -113,7 +115,8 @@ export function createGeminiClient(): GeminiClient {
         }
 
         return results;
-      } catch {
+      } catch (err) {
+        logger.debug({ err, textCount: texts.length }, 'Gemini embedding failed');
         return [];
       }
     },

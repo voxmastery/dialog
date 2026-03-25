@@ -1,4 +1,7 @@
 import express, { type Request, type Response } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { createServer } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { join } from 'node:path';
@@ -6,9 +9,19 @@ import { existsSync } from 'node:fs';
 import type { LogStorage } from '../storage/duckdb.js';
 import type { JourneyIndex } from '../journey/index.js';
 import type { AiRouter } from '../ai/router.js';
-import type { ParsedLogEntry, LogLevel } from '../types.js';
+import type { ParsedLogEntry } from '../types.js';
 import { createDaemon, type Daemon } from '../daemon/index.js';
 import type { DialogConfig } from '../types.js';
+import { logger } from '../lib/logger.js';
+import {
+  errorsQuerySchema,
+  logsQuerySchema,
+  askBodySchema,
+  exportBodySchema,
+  userIdSchema,
+  timeseriesQuerySchema,
+  latencyQuerySchema,
+} from './validation.js';
 
 export interface WebServerContext {
   readonly storage: LogStorage;
@@ -21,6 +34,18 @@ export interface WebServerContext {
 export function createWebServer(ctx: WebServerContext) {
   const app = express();
   app.use(express.json());
+
+  // Security headers
+  app.use(helmet({ contentSecurityPolicy: false })); // CSP disabled for SPA
+
+  // CORS — localhost only
+  app.use(cors({ origin: /^https?:\/\/localhost(:\d+)?$/ }));
+
+  // Rate limiting
+  const apiLimiter = rateLimit({ windowMs: 60_000, max: 100, standardHeaders: true, legacyHeaders: false });
+  const aiLimiter = rateLimit({ windowMs: 60_000, max: 20, message: { error: 'AI rate limit exceeded. Try again in a minute.' } });
+  app.use('/api/', apiLimiter);
+  app.use('/api/ask', aiLimiter);
 
   // --- REST API Routes ---
 
@@ -39,7 +64,8 @@ export function createWebServer(ctx: WebServerContext) {
         })),
       });
     } catch (err) {
-      res.status(500).json({ error: 'Failed to get health' });
+      logger.error({ err, path: '/api/health' }, 'Route error');
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -78,39 +104,41 @@ export function createWebServer(ctx: WebServerContext) {
       });
 
       res.json({ services: result });
-    } catch {
-      res.status(500).json({ error: 'Failed to list services' });
+    } catch (err) {
+      logger.error({ err, path: '/api/services' }, 'Route error');
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
   // Get errors
   app.get('/api/errors', async (req: Request, res: Response) => {
     try {
-      const errors = await ctx.storage.queryErrors({
-        last: (req.query['last'] as string) ?? '1h',
-        service: req.query['service'] as string | undefined,
-        level: (req.query['level'] as LogLevel) ?? 'ERROR',
-      });
+      const parsed = errorsQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' });
+        return;
+      }
+      const errors = await ctx.storage.queryErrors(parsed.data);
       res.json({ errors, total: errors.length });
-    } catch {
-      res.status(500).json({ error: 'Failed to query errors' });
+    } catch (err) {
+      logger.error({ err, path: req.path }, 'Route error');
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
   // Get logs
   app.get('/api/logs', async (req: Request, res: Response) => {
     try {
-      const logs = await ctx.storage.queryLogs({
-        last: (req.query['last'] as string) ?? '1h',
-        service: req.query['service'] as string | undefined,
-        level: req.query['level'] as LogLevel | undefined,
-        path: req.query['path'] as string | undefined,
-        grep: req.query['grep'] as string | undefined,
-        limit: req.query['limit'] ? parseInt(req.query['limit'] as string, 10) : 200,
-      });
+      const parsed = logsQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' });
+        return;
+      }
+      const logs = await ctx.storage.queryLogs(parsed.data);
       res.json({ logs, total: logs.length });
-    } catch {
-      res.status(500).json({ error: 'Failed to query logs' });
+    } catch (err) {
+      logger.error({ err, path: req.path }, 'Route error');
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -118,7 +146,12 @@ export function createWebServer(ctx: WebServerContext) {
   app.get('/api/journey/:userId', async (req: Request, res: Response) => {
     try {
       const { reconstructJourney } = await import('../journey/reconstruct.js');
-      const userId = req.params['userId'] as string;
+      const userIdResult = userIdSchema.safeParse(req.params['userId']);
+      if (!userIdResult.success) {
+        res.status(400).json({ error: userIdResult.error.issues[0]?.message ?? 'Invalid user ID' });
+        return;
+      }
+      const userId = userIdResult.data;
       const events = ctx.journeyIndex.getJourneyByUser(userId);
 
       if (events.length === 0) {
@@ -134,37 +167,39 @@ export function createWebServer(ctx: WebServerContext) {
         root_cause_index: journey.rootCauseIndex,
         events: journey.events,
       });
-    } catch {
-      res.status(500).json({ error: 'Failed to get journey' });
+    } catch (err) {
+      logger.error({ err, path: req.path }, 'Route error');
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
   // AI ask
   app.post('/api/ask', async (req: Request, res: Response) => {
     try {
-      const { question } = req.body as { question?: string };
-      if (!question?.trim()) {
-        res.status(400).json({ error: 'Question is required' });
+      const parsed = askBodySchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' });
         return;
       }
 
-      const response = await ctx.aiRouter.handleQuestion(question);
+      const response = await ctx.aiRouter.handleQuestion(parsed.data.question);
       res.json(response);
-    } catch {
-      res.status(500).json({ error: 'Failed to process question' });
+    } catch (err) {
+      logger.error({ err, path: req.path }, 'Route error');
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
   // Export
   app.post('/api/export', async (req: Request, res: Response) => {
     try {
-      const { type, format, filters } = req.body as {
-        type?: 'errors' | 'logs' | 'journey';
-        format?: 'json' | 'csv' | 'md';
-        filters?: Record<string, string>;
-      };
+      const parsed = exportBodySchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' });
+        return;
+      }
 
-      const exportFormat = format ?? 'json';
+      const { type, format: exportFormat, filters } = parsed.data;
 
       if (type === 'errors') {
         const errors = await ctx.storage.queryErrors({
@@ -183,16 +218,21 @@ export function createWebServer(ctx: WebServerContext) {
         });
         res.json({ data: logs, format: exportFormat });
       }
-    } catch {
-      res.status(500).json({ error: 'Failed to export' });
+    } catch (err) {
+      logger.error({ err, path: req.path }, 'Route error');
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
   // Health metrics for dashboard charts
   app.get('/api/metrics/timeseries', async (req: Request, res: Response) => {
     try {
-      const service = req.query['service'] as string | undefined;
-      const interval = parseInt((req.query['interval'] as string) ?? '5', 10);
+      const parsed = timeseriesQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' });
+        return;
+      }
+      const { service, interval } = parsed.data;
       const services = ctx.daemon.getServices();
 
       const results: Record<string, { timestamp: string; count: number }[]> = {};
@@ -203,17 +243,23 @@ export function createWebServer(ctx: WebServerContext) {
       }
 
       res.json({ timeseries: results });
-    } catch {
-      res.status(500).json({ error: 'Failed to get timeseries' });
+    } catch (err) {
+      logger.error({ err, path: req.path }, 'Route error');
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
   // Latency stats
   app.get('/api/metrics/latency', async (req: Request, res: Response) => {
     try {
+      const parsed = latencyQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' });
+        return;
+      }
       const logs = await ctx.storage.queryLogs({
-        last: (req.query['last'] as string) ?? '5m',
-        service: req.query['service'] as string | undefined,
+        last: parsed.data.last,
+        service: parsed.data.service,
         limit: 5000,
       });
 
@@ -237,8 +283,9 @@ export function createWebServer(ctx: WebServerContext) {
           ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
           : null,
       });
-    } catch {
-      res.status(500).json({ error: 'Failed to get latency' });
+    } catch (err) {
+      logger.error({ err, path: req.path }, 'Route error');
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -331,7 +378,14 @@ export function createWebServer(ctx: WebServerContext) {
     httpServer,
     wss,
     start(port: number): Promise<void> {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
+        httpServer.on('error', (err: NodeJS.ErrnoException) => {
+          if (err.code === 'EADDRINUSE') {
+            reject(new Error(`Port ${port} is already in use. Try a different port with --port`));
+          } else {
+            reject(err);
+          }
+        });
         httpServer.listen(port, () => resolve());
       });
     },

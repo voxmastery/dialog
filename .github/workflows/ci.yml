@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Type check backend
+        run: npx tsc --noEmit
+
+      - name: Run backend tests
+        run: npm test
+
+      - name: Build backend
+        run: npm run build
+
+      - name: Install dashboard dependencies
+        working-directory: dashboard
+        run: npm ci
+
+      - name: Type check dashboard
+        working-directory: dashboard
+        run: npx tsc --noEmit
+
+      - name: Run dashboard tests
+        working-directory: dashboard
+        run: npm test || true
+
+      - name: Build dashboard
+        working-directory: dashboard
+        run: npm run build

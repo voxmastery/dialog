@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { parse as parseToml } from 'toml';
 import type { DialogConfig } from '../types.js';
+import { logger } from '../lib/logger.js';
 import {
   DEFAULT_CONFIG,
   DIALOG_DIR,
@@ -51,7 +52,8 @@ export function loadConfig(): DialogConfig {
         ? [...parsed.ports]
         : [...DEFAULT_CONFIG.ports],
     };
-  } catch {
+  } catch (err) {
+    logger.warn({ err, configPath }, 'Config parse failed, using defaults');
     return { ...DEFAULT_CONFIG };
   }
 }

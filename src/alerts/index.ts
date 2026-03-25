@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import type { ParsedLogEntry, LogLevel, DialogConfig } from '../types.js';
+import { logger } from '../lib/logger.js';
 
 export interface AlertDispatcher extends EventEmitter {
   processEntry(entry: ParsedLogEntry): void;
@@ -75,7 +76,7 @@ async function sendDesktopNotification(level: LogLevel, service: string, message
       sound: level === 'FATAL',
       timeout: 10,
     });
-  } catch {
-    // node-notifier not available, skip
+  } catch (err) {
+    logger.debug({ err, level, service }, 'Desktop notification failed');
   }
 }

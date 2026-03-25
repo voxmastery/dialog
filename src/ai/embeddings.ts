@@ -1,5 +1,6 @@
 import type { ParsedLogEntry } from '../types.js';
 import type { MistralClient } from './mistral.js';
+import { logger } from '../lib/logger.js';
 
 export interface EmbeddingStore {
   init(): Promise<void>;
@@ -30,8 +31,8 @@ export function createEmbeddingStore(
           name: 'dialog_logs',
           metadata: { 'hnsw:space': 'cosine' },
         });
-      } catch {
-        // ChromaDB not available — semantic search will return empty results
+      } catch (err) {
+        logger.debug({ err }, 'ChromaDB not available — semantic search will return empty results');
         collection = null;
       }
     },
@@ -61,8 +62,8 @@ export function createEmbeddingStore(
             path: e.path ?? '',
           })),
         });
-      } catch {
-        // Silently fail — embedding is best-effort
+      } catch (err) {
+        logger.debug({ err, entryCount: entries.length }, 'Failed to store embeddings');
       }
     },
 
@@ -86,7 +87,8 @@ export function createEmbeddingStore(
           score: results.distances?.[0]?.[i] ?? 0,
           metadata: results.metadatas?.[0]?.[i] ?? {},
         }));
-      } catch {
+      } catch (err) {
+        logger.debug({ err, query }, 'Semantic search failed');
         return [];
       }
     },

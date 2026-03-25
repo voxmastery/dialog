@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import { getDialogHome, getDataDir, loadConfig } from '../../config/index.js';
 import { PID_FILE, DUCKDB_FILE } from '../../config/defaults.js';
 import { scanAllPorts } from '../../daemon/detector.js';
+import { logger } from '../../lib/logger.js';
 
 export function registerStatusCommand(program: Command): void {
   program
@@ -21,7 +22,8 @@ export function registerStatusCommand(program: Command): void {
           daemonPid = parseInt(readFileSync(pidPath, 'utf-8').trim(), 10);
           process.kill(daemonPid, 0);
           daemonRunning = true;
-        } catch {
+        } catch (err) {
+          logger.debug({ err, daemonPid }, 'Daemon PID check failed');
           daemonRunning = false;
         }
       }
@@ -62,8 +64,8 @@ export function registerStatusCommand(program: Command): void {
             }
           }
           await storage.close();
-        } catch {
-          // No storage available yet
+        } catch (err) {
+          logger.debug({ err, dbPath }, 'Storage not available for error counts');
         }
       }
 

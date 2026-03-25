@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import chalk from 'chalk';
 import { getDialogHome, getDataDir, ensureDirectories, loadConfig } from '../../config/index.js';
 import { DUCKDB_FILE, SQLITE_FILE } from '../../config/defaults.js';
+import { logger } from '../../lib/logger.js';
 
 const WEB_PID_FILE = 'dialog-web.pid';
 
@@ -15,7 +16,8 @@ function isWebRunning(): { running: boolean; pid: number | null } {
     const pid = parseInt(readFileSync(pidPath, 'utf-8').trim(), 10);
     process.kill(pid, 0);
     return { running: true, pid };
-  } catch {
+  } catch (err) {
+    logger.debug({ err }, 'Web PID check failed, not running');
     return { running: false, pid: null };
   }
 }
@@ -70,7 +72,7 @@ export function registerWebStartCommand(program: Command): void {
         const daemon = createDaemon(config);
 
         daemon.onLog((entry) => {
-          storage.insertLog(entry).catch(() => {});
+          storage.insertLog(entry).catch(err => logger.error({ err, service: entry.service }, 'Failed to insert log'));
           journeyIndex.indexEvent(entry);
           alerts.processEntry(entry);
         });
@@ -119,7 +121,7 @@ export function registerWebStartCommand(program: Command): void {
           try {
             const { unlinkSync } = await import('node:fs');
             unlinkSync(pidPath);
-          } catch {}
+          } catch (err) { logger.debug({ err }, 'Failed to clean up PID file'); }
           process.exit(0);
         };
 
@@ -128,7 +130,7 @@ export function registerWebStartCommand(program: Command): void {
 
         // Periodic cleanup
         setInterval(() => {
-          storage.cleanupOldLogs(config.retention_hours).catch(() => {});
+          storage.cleanupOldLogs(config.retention_hours).catch(err => logger.error({ err }, 'Log cleanup failed'));
         }, 3600000);
 
       } catch (err) {

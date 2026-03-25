@@ -1,4 +1,5 @@
 import { SYSTEM_PROMPT, SQL_GENERATION_PROMPT } from './prompts.js';
+import { logger } from '../lib/logger.js';
 
 const OPENROUTER_API_KEY = process.env['OPENROUTER_API_KEY'] ?? '';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -55,7 +56,7 @@ export function createOpenRouterClient() {
         const upper = cleaned.toUpperCase();
         if (['DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE', 'TRUNCATE'].some(kw => upper.includes(kw))) return null;
         return upper.startsWith('SELECT') ? cleaned : null;
-      } catch { return null; }
+      } catch (err) { logger.debug({ err }, 'OpenRouter SQL generation failed'); return null; }
     },
   };
 }

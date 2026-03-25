@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import chalk from 'chalk';
 import { getDialogHome } from '../../config/index.js';
 import { PID_FILE } from '../../config/defaults.js';
+import { logger } from '../../lib/logger.js';
 
 export function registerStopCommand(program: Command): void {
   program
@@ -24,12 +25,14 @@ export function registerStopCommand(program: Command): void {
           process.kill(pid, 0); // Check if alive
           process.kill(pid, 'SIGTERM');
           console.log(chalk.green(`Dialog stopped (PID: ${pid})`));
-        } catch {
+        } catch (err) {
+          logger.debug({ err, pid }, 'Process not running');
           console.log(chalk.yellow('Dialog process was not running (stale PID file).'));
         }
 
         unlinkSync(pidPath);
-      } catch {
+      } catch (err) {
+        logger.error({ err, pidPath }, 'Failed to read PID file');
         console.log(chalk.red('Failed to read PID file.'));
       }
     });

@@ -2,6 +2,7 @@ import type { AiResponse, QueryFilters } from '../types.js';
 import type { MistralClient } from './mistral.js';
 import type { EmbeddingStore } from './embeddings.js';
 import { classifyIntent, type Intent } from './prompts.js';
+import { logger } from '../lib/logger.js';
 
 export interface AiRouter {
   handleQuestion(question: string): Promise<AiResponse>;
@@ -31,8 +32,8 @@ export function createAiRouter(
           parts.push(`Query: ${sql}`);
           parts.push(JSON.stringify(sqlResults.slice(0, 20), null, 2));
         }
-      } catch {
-        // SQL failed, continue with other retrieval
+      } catch (err) {
+        logger.debug({ err }, 'SQL retrieval failed, using fallback');
       }
     }
 

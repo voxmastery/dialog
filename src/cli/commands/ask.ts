@@ -6,6 +6,7 @@ import chalk from 'chalk';
 import { getDataDir } from '../../config/index.js';
 import { DUCKDB_FILE } from '../../config/defaults.js';
 import { isWebRunning, apiPost, apiGet } from '../api-proxy.js';
+import { logger } from '../../lib/logger.js';
 
 // ─── UI Constants ───────────────────────────────────────────────
 const LOGO = `
@@ -85,7 +86,8 @@ async function startRepl(useApi: boolean): Promise<void> {
     try {
       const health = await apiGet<{ services: number }>('/api/health');
       console.log(`  ${chalk.green('●')} Connected to dialog-web ${chalk.dim(`(${health.services} service${health.services !== 1 ? 's' : ''} monitored)`)}`);
-    } catch {
+    } catch (err) {
+      logger.debug({ err }, 'Failed to fetch health for REPL banner');
       console.log(`  ${chalk.green('●')} Connected to dialog-web`);
     }
   } else {
@@ -189,7 +191,8 @@ async function startRepl(useApi: boolean): Promise<void> {
         } else {
           console.log(`  ${chalk.yellow('Start dialog-web for /logs')}`);
         }
-      } catch {
+      } catch (err) {
+        logger.debug({ err }, 'Failed to fetch logs via API');
         console.log(`  ${chalk.red('Failed to fetch logs')}`);
       }
       console.log('');
@@ -215,7 +218,8 @@ async function startRepl(useApi: boolean): Promise<void> {
         } else {
           console.log(`  ${chalk.yellow('Start dialog-web for /status')}`);
         }
-      } catch {
+      } catch (err) {
+        logger.debug({ err }, 'Failed to fetch status via API');
         console.log(`  ${chalk.red('Failed to fetch status')}`);
       }
       console.log('');

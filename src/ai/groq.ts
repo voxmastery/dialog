@@ -1,4 +1,5 @@
 import { SYSTEM_PROMPT, SQL_GENERATION_PROMPT } from './prompts.js';
+import { logger } from '../lib/logger.js';
 
 const GROQ_API_KEY = process.env['GROQ_API_KEY'] ?? '';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -50,7 +51,7 @@ export function createGroqClient() {
         const upper = cleaned.toUpperCase();
         if (['DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE', 'TRUNCATE'].some(kw => upper.includes(kw))) return null;
         return upper.startsWith('SELECT') ? cleaned : null;
-      } catch { return null; }
+      } catch (err) { logger.debug({ err }, 'Groq SQL generation failed'); return null; }
     },
   };
 }

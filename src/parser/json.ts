@@ -1,4 +1,5 @@
 import type { LogLevel, ParsedLogEntry } from '../types.js';
+import { logger } from '../lib/logger.js';
 
 const LEVEL_MAP: Readonly<Record<string, LogLevel>> = {
   debug: 'DEBUG',
@@ -53,7 +54,8 @@ export function parseJsonLog(line: string, service: string): ParsedLogEntry | nu
   let obj: Record<string, unknown>;
   try {
     obj = JSON.parse(line) as Record<string, unknown>;
-  } catch {
+  } catch (err) {
+    logger.debug({ err, service }, 'JSON log parse failed');
     return null;
   }
 

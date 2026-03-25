@@ -1,0 +1,1 @@
+import{d as r,e as t}from"./index-Ya6IpuKG.js";function u(e){return r({queryKey:["latency",e],queryFn:()=>t.getLatency(e),refetchInterval:1e4})}function s(e){return r({queryKey:["timeseries",e],queryFn:()=>t.getTimeseries(e),refetchInterval:15e3})}export{s as a,u};

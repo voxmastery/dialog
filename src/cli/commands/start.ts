@@ -6,6 +6,7 @@ import chalk from 'chalk';
 import { getDialogHome, ensureDirectories, loadConfig } from '../../config/index.js';
 import { PID_FILE } from '../../config/defaults.js';
 import { scanAllPorts } from '../../daemon/detector.js';
+import { logger } from '../../lib/logger.js';
 
 function isDaemonRunning(): { running: boolean; pid: number | null } {
   const pidPath = join(getDialogHome(), PID_FILE);
@@ -15,7 +16,8 @@ function isDaemonRunning(): { running: boolean; pid: number | null } {
     const pid = parseInt(readFileSync(pidPath, 'utf-8').trim(), 10);
     process.kill(pid, 0); // Check if alive
     return { running: true, pid };
-  } catch {
+  } catch (err) {
+    logger.debug({ err }, 'PID check failed, daemon not running');
     return { running: false, pid: null };
   }
 }
@@ -89,7 +91,8 @@ export function registerStartCommand(program: Command): void {
             child.unref();
             console.log(chalk.green(`Dialog started (PID: ${child.pid})`));
           }
-        } catch {
+        } catch (err) {
+          logger.warn({ err }, 'Failed to fork daemon process');
           console.log(chalk.yellow('Could not daemonize. Running in foreground...'));
           const pidPath = join(getDialogHome(), PID_FILE);
           writeFileSync(pidPath, String(process.pid));
