@@ -1,12 +1,7 @@
 import { type Command } from 'commander';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import chalk from 'chalk';
-import { getDataDir } from '../../config/index.js';
-import { DUCKDB_FILE } from '../../config/defaults.js';
 import { isWebRunning, apiPost, apiGet } from '../api-proxy.js';
-import { logger } from '../../lib/logger.js';
 
 // ─── UI Constants ───────────────────────────────────────────────
 const LOGO = `
@@ -35,30 +30,7 @@ async function askViaApi(question: string): Promise<string> {
   throw new Error(response.error ?? 'No answer');
 }
 
-async function askDirect(question: string): Promise<string> {
-  const dbPath = join(getDataDir(), DUCKDB_FILE);
-  if (!existsSync(dbPath)) throw new Error('No log data yet. Run dialog-web start first.');
-
-  const { createUnifiedAiClient } = await import('../../ai/providers.js');
-  const { createEmbeddingStore } = await import('../../ai/embeddings.js');
-  const { createAiRouter } = await import('../../ai/router.js');
-  const { createStorage } = await import('../../storage/duckdb.js');
-
-  const storage = await createStorage(dbPath);
-  await storage.init();
-  const client = createUnifiedAiClient();
-  const embeddings = createEmbeddingStore(client);
-  await embeddings.init();
-  const router = createAiRouter(client, embeddings, storage);
-  const response = await router.handleQuestion(question);
-  await storage.close();
-
-  if (response.success && response.answer) return response.answer;
-  throw new Error(response.error ?? 'No answer');
-}
-
 function formatResponse(text: string): string {
-  // Add indentation and style code blocks
   return text
     .split('\n')
     .map(line => {
@@ -77,21 +49,15 @@ function randomTip(): string {
 
 // ─── Interactive REPL ───────────────────────────────────────────
 
-async function startRepl(useApi: boolean): Promise<void> {
+async function startRepl(): Promise<void> {
   console.log(LOGO);
   console.log('');
 
-  if (useApi) {
-    // Get service count
-    try {
-      const health = await apiGet<{ services: number }>('/api/health');
-      console.log(`  ${chalk.green('●')} Connected to dialog-web ${chalk.dim(`(${health.services} service${health.services !== 1 ? 's' : ''} monitored)`)}`);
-    } catch (err) {
-      logger.debug({ err }, 'Failed to fetch health for REPL banner');
-      console.log(`  ${chalk.green('●')} Connected to dialog-web`);
-    }
-  } else {
-    console.log(`  ${chalk.yellow('●')} Direct mode ${chalk.dim('(start dialog-web for full features)')}`);
+  try {
+    const health = await apiGet<{ services: number }>('/api/health');
+    console.log(`  ${chalk.green('●')} Connected to dialog-web ${chalk.dim(`(${health.services} service${health.services !== 1 ? 's' : ''} monitored)`)}`);
+  } catch {
+    console.log(`  ${chalk.green('●')} Connected to dialog-web`);
   }
 
   console.log(`  ${chalk.dim('Type a question, or')} ${chalk.white('/errors')} ${chalk.white('/logs')} ${chalk.white('/status')} ${chalk.white('/help')} ${chalk.white('/exit')}`);
@@ -112,7 +78,6 @@ async function startRepl(useApi: boolean): Promise<void> {
     const input = line.trim();
     if (!input) { rl.prompt(); return; }
 
-    // Slash commands
     if (input === '/exit' || input === '/quit' || input === 'exit' || input === 'quit') {
       console.log(`\n  ${chalk.dim('Goodbye.')}\n`);
       rl.close();
@@ -129,7 +94,6 @@ async function startRepl(useApi: boolean): Promise<void> {
       console.log(`    ${chalk.cyan('/exit')}      ${chalk.dim('Quit Dialog')}`);
       console.log('');
       console.log(`  ${chalk.bold('Ask anything:')}`);
-      console.log(`    ${chalk.dim('Just type a question in plain English.')}`);
       console.log(`    ${chalk.dim(`Example: ${randomTip()}`)}`);
       console.log('');
       console.log(SEPARATOR);
@@ -147,23 +111,19 @@ async function startRepl(useApi: boolean): Promise<void> {
 
     if (input === '/errors') {
       try {
-        if (useApi) {
-          const data = await apiGet<{ errors: { error_message: string; count: number; last_seen: string }[] }>('/api/errors?last=1h');
-          console.log('');
-          if (data.errors.length === 0) {
-            console.log(`  ${chalk.green('✓')} No errors in the last hour`);
-          } else {
-            console.log(`  ${chalk.bold('Recent Errors')} ${chalk.dim('(last 1h)')}`);
-            console.log('');
-            for (const err of data.errors) {
-              console.log(`  ${chalk.red(`${err.count}x`)} ${err.error_message.length > 60 ? err.error_message.slice(0, 57) + '...' : err.error_message}`);
-              console.log(`    ${chalk.dim(`Last: ${err.last_seen}`)}`);
-            }
-          }
+        const data = await apiGet<{ errors: { error_message: string; count: number; last_seen: string }[] }>('/api/errors?last=1h');
+        console.log('');
+        if (data.errors.length === 0) {
+          console.log(`  ${chalk.green('✓')} No errors in the last hour`);
         } else {
-          console.log(`  ${chalk.yellow('Start dialog-web for /errors')}`);
+          console.log(`  ${chalk.bold('Recent Errors')} ${chalk.dim('(last 1h)')}`);
+          console.log('');
+          for (const err of data.errors) {
+            console.log(`  ${chalk.red(`${err.count}x`)} ${err.error_message.length > 60 ? err.error_message.slice(0, 57) + '...' : err.error_message}`);
+            console.log(`    ${chalk.dim(`Last: ${err.last_seen}`)}`);
+          }
         }
-      } catch (e) {
+      } catch {
         console.log(`  ${chalk.red('Failed to fetch errors')}`);
       }
       console.log('');
@@ -174,25 +134,20 @@ async function startRepl(useApi: boolean): Promise<void> {
 
     if (input === '/logs') {
       try {
-        if (useApi) {
-          const data = await apiGet<{ logs: { timestamp: string; level: string | null; service: string; message: string }[]; total: number }>('/api/logs?last=5m&limit=10');
-          console.log('');
-          if (data.logs.length === 0) {
-            console.log(`  ${chalk.dim('No logs in the last 5 minutes')}`);
-          } else {
-            console.log(`  ${chalk.bold('Recent Logs')} ${chalk.dim('(last 5m, showing 10)')}`);
-            console.log('');
-            for (const log of data.logs) {
-              const ts = chalk.dim(String(log.timestamp).slice(11, 19));
-              const lvl = log.level === 'ERROR' ? chalk.red(log.level) : log.level === 'WARN' ? chalk.yellow(log.level) : chalk.dim(log.level ?? 'INFO');
-              console.log(`  ${ts} ${lvl} ${log.message.slice(0, 70)}`);
-            }
-          }
+        const data = await apiGet<{ logs: { timestamp: string; level: string | null; service: string; message: string }[]; total: number }>('/api/logs?last=5m&limit=10');
+        console.log('');
+        if (data.logs.length === 0) {
+          console.log(`  ${chalk.dim('No logs in the last 5 minutes')}`);
         } else {
-          console.log(`  ${chalk.yellow('Start dialog-web for /logs')}`);
+          console.log(`  ${chalk.bold('Recent Logs')} ${chalk.dim('(last 5m, showing 10)')}`);
+          console.log('');
+          for (const log of data.logs) {
+            const ts = chalk.dim(String(log.timestamp).slice(11, 19));
+            const lvl = log.level === 'ERROR' ? chalk.red(log.level) : log.level === 'WARN' ? chalk.yellow(log.level) : chalk.dim(log.level ?? 'INFO');
+            console.log(`  ${ts} ${lvl} ${log.message.slice(0, 70)}`);
+          }
         }
-      } catch (err) {
-        logger.debug({ err }, 'Failed to fetch logs via API');
+      } catch {
         console.log(`  ${chalk.red('Failed to fetch logs')}`);
       }
       console.log('');
@@ -203,23 +158,18 @@ async function startRepl(useApi: boolean): Promise<void> {
 
     if (input === '/status') {
       try {
-        if (useApi) {
-          const data = await apiGet<{ services: { service: string; framework: string; status: string; error_count_5m: number }[] }>('/api/services');
-          console.log('');
-          console.log(`  ${chalk.bold('Services')}`);
-          console.log('');
-          for (const svc of data.services) {
-            const icon = svc.status === 'OK' ? chalk.green('●') : svc.status === 'WARN' ? chalk.yellow('●') : chalk.red('●');
-            console.log(`  ${icon} ${chalk.white(svc.service)} ${chalk.cyan(svc.framework)} ${svc.error_count_5m > 0 ? chalk.red(`${svc.error_count_5m} errors`) : chalk.green('OK')}`);
-          }
-          if (data.services.length === 0) {
-            console.log(`  ${chalk.dim('No services detected')}`);
-          }
-        } else {
-          console.log(`  ${chalk.yellow('Start dialog-web for /status')}`);
+        const data = await apiGet<{ services: { service: string; framework: string; status: string; error_count_5m: number }[] }>('/api/services');
+        console.log('');
+        console.log(`  ${chalk.bold('Services')}`);
+        console.log('');
+        for (const svc of data.services) {
+          const icon = svc.status === 'OK' ? chalk.green('●') : svc.status === 'WARN' ? chalk.yellow('●') : chalk.red('●');
+          console.log(`  ${icon} ${chalk.white(svc.service)} ${chalk.cyan(svc.framework)} ${svc.error_count_5m > 0 ? chalk.red(`${svc.error_count_5m} errors`) : chalk.green('OK')}`);
         }
-      } catch (err) {
-        logger.debug({ err }, 'Failed to fetch status via API');
+        if (data.services.length === 0) {
+          console.log(`  ${chalk.dim('No services detected')}`);
+        }
+      } catch {
         console.log(`  ${chalk.red('Failed to fetch status')}`);
       }
       console.log('');
@@ -236,7 +186,7 @@ async function startRepl(useApi: boolean): Promise<void> {
     }, 80);
 
     try {
-      const answer = useApi ? await askViaApi(input) : await askDirect(input);
+      const answer = await askViaApi(input);
       clearInterval(spinTimer);
       process.stdout.write('\r' + ' '.repeat(30) + '\r');
       console.log('');
@@ -259,7 +209,7 @@ async function startRepl(useApi: boolean): Promise<void> {
 
 // ─── Single question mode ───────────────────────────────────────
 
-async function askOnce(question: string, useApi: boolean): Promise<void> {
+async function askOnce(question: string): Promise<void> {
   const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
   let spinIdx = 0;
   const spinTimer = setInterval(() => {
@@ -267,7 +217,7 @@ async function askOnce(question: string, useApi: boolean): Promise<void> {
   }, 80);
 
   try {
-    const answer = useApi ? await askViaApi(question) : await askDirect(question);
+    const answer = await askViaApi(question);
     clearInterval(spinTimer);
     process.stdout.write('\r' + ' '.repeat(30) + '\r');
     console.log('');
@@ -290,13 +240,17 @@ export function registerAskCommand(program: Command): void {
     .description('AI-powered log analysis (interactive mode if no question given)')
     .option('-i, --interactive', 'Start interactive chat mode')
     .action(async (question: string | undefined, options: { interactive?: boolean }) => {
-      const useApi = await isWebRunning();
-
-      if (!question || options.interactive) {
-        await startRepl(useApi);
+      if (!(await isWebRunning())) {
+        console.log(chalk.yellow('  dialog-web is not running. Start it first:'));
+        console.log(chalk.dim('  $ dialog-web start'));
         return;
       }
 
-      await askOnce(question, useApi);
+      if (!question || options.interactive) {
+        await startRepl();
+        return;
+      }
+
+      await askOnce(question);
     });
 }

@@ -1,12 +1,12 @@
 import pino from 'pino';
 
-const level = process.env['LOG_LEVEL'] ?? (process.env['NODE_ENV'] === 'production' ? 'info' : 'debug');
+// Default to 'warn' — silent during normal CLI use.
+// Users opt into verbose logging with LOG_LEVEL=debug
+const level = process.env['LOG_LEVEL'] ?? 'warn';
 
 export const logger = pino({
   level,
-  transport: process.env['NODE_ENV'] !== 'production'
-    ? { target: 'pino/file', options: { destination: 2 } } // stderr
-    : undefined,
+  transport: { target: 'pino/file', options: { destination: 2 } }, // stderr only
   formatters: {
     level: (label) => ({ level: label }),
   },

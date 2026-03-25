@@ -1,9 +1,5 @@
 import { type Command } from 'commander';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import chalk from 'chalk';
-import { getDataDir } from '../../config/index.js';
-import { SQLITE_FILE } from '../../config/defaults.js';
 import { isWebRunning, apiGet } from '../api-proxy.js';
 import type { JourneyEvent } from '../../types.js';
 
@@ -38,54 +34,29 @@ export function registerJourneyCommand(program: Command): void {
         return;
       }
 
+      if (!(await isWebRunning())) {
+        console.log(chalk.yellow('  dialog-web is not running. Start it first:'));
+        console.log(chalk.dim('  $ dialog-web start'));
+        return;
+      }
+
       try {
-        // Try API first
-        if (await isWebRunning()) {
-          const userId = options.user ?? options.session;
-          const data = await apiGet<{
-            user_id: string;
-            event_count: number;
-            has_errors: boolean;
-            root_cause_index: number | null;
-            events: JourneyEvent[];
-          }>(`/api/journey/${userId}`);
+        const userId = options.user ?? options.session;
+        const data = await apiGet<{
+          user_id: string;
+          event_count: number;
+          has_errors: boolean;
+          root_cause_index: number | null;
+          events: JourneyEvent[];
+        }>(`/api/journey/${userId}`);
 
-          console.log(chalk.bold(`\n  Journey — User: ${data.user_id}`));
-          console.log(chalk.dim(`  ${data.event_count} event(s)${data.has_errors ? chalk.red(' (errors found)') : ''}\n`));
-          printTimeline(data.events, data.root_cause_index);
-          console.log('');
-          return;
-        }
-
-        // Direct DB access
-        const dbPath = join(getDataDir(), SQLITE_FILE);
-        if (!existsSync(dbPath)) {
-          console.log(chalk.yellow('  No journey data yet. Start monitoring with: dialog-cli start'));
-          return;
-        }
-
-        const { createJourneyIndex } = await import('../../journey/index.js');
-        const { reconstructJourney } = await import('../../journey/reconstruct.js');
-        const idx = createJourneyIndex(dbPath);
-        idx.init();
-        const events = options.user
-          ? idx.getJourneyByUser(options.user)
-          : idx.getJourneyBySession(options.session);
-        idx.close();
-
-        if (events.length === 0) {
-          console.log(chalk.yellow(`  No journey found for ${options.user ? 'user' : 'session'}: ${options.user ?? options.session}`));
-          return;
-        }
-
-        const journey = reconstructJourney(events);
-        console.log(chalk.bold(`\n  Journey — User: ${journey.userId}`));
-        console.log(chalk.dim(`  ${events.length} event(s)\n`));
-        printTimeline(journey.events, journey.rootCauseIndex);
+        console.log(chalk.bold(`\n  Journey — User: ${data.user_id}`));
+        console.log(chalk.dim(`  ${data.event_count} event(s)${data.has_errors ? chalk.red(' (errors found)') : ''}\n`));
+        printTimeline(data.events, data.root_cause_index);
         console.log('');
       } catch (err) {
         const msg = err instanceof Error ? err.message : '';
-        if (msg.includes('404') || msg.includes('No journey')) {
+        if (msg.includes('404')) {
           console.log(chalk.yellow(`  No journey found for: ${options.user ?? options.session}`));
         } else {
           console.log(chalk.red('  Failed to load journey.'), msg);

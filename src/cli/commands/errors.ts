@@ -1,9 +1,5 @@
 import { type Command } from 'commander';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import chalk from 'chalk';
-import { getDataDir } from '../../config/index.js';
-import { DUCKDB_FILE } from '../../config/defaults.js';
 import { isWebRunning, apiGet } from '../api-proxy.js';
 import type { ErrorGroup } from '../../types.js';
 
@@ -42,36 +38,20 @@ export function registerErrorsCommand(program: Command): void {
     .option('--service <name>', 'Filter by service')
     .option('--level <level>', 'Filter by level (ERROR, FATAL)')
     .action(async (options) => {
+      if (!(await isWebRunning())) {
+        console.log(chalk.yellow('  dialog-web is not running. Start it first:'));
+        console.log(chalk.dim('  $ dialog-web start'));
+        return;
+      }
+
       try {
-        // Try API first (avoids DuckDB lock)
-        if (await isWebRunning()) {
-          const qs = new URLSearchParams({
-            last: options.last,
-            ...(options.service && { service: options.service }),
-            ...(options.level && { level: options.level }),
-          }).toString();
-          const data = await apiGet<{ errors: ErrorGroup[] }>(`/api/errors?${qs}`);
-          printErrors(data.errors, options.last);
-          return;
-        }
-
-        // Direct DB access
-        const dbPath = join(getDataDir(), DUCKDB_FILE);
-        if (!existsSync(dbPath)) {
-          console.log(chalk.yellow('  No log data yet. Start monitoring with: dialog-cli start'));
-          return;
-        }
-
-        const { createStorage } = await import('../../storage/duckdb.js');
-        const storage = await createStorage(dbPath);
-        await storage.init();
-        const errors = await storage.queryErrors({
+        const qs = new URLSearchParams({
           last: options.last,
-          service: options.service,
-          level: options.level ?? 'ERROR',
-        });
-        await storage.close();
-        printErrors(errors, options.last);
+          ...(options.service && { service: options.service }),
+          ...(options.level && { level: options.level }),
+        }).toString();
+        const data = await apiGet<{ errors: ErrorGroup[] }>(`/api/errors?${qs}`);
+        printErrors(data.errors, options.last);
       } catch (err) {
         console.log(chalk.red('  Failed to query errors.'), err instanceof Error ? err.message : '');
       }
