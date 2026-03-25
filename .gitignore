@@ -1,0 +1,13 @@
+node_modules/
+dist/
+!dashboard/dist/
+*.js.map
+*.d.ts
+!vitest.config.ts
+!tailwind.config.ts
+!postcss.config.js
+.env
+.env.local
+coverage/
+marketing/out/
+marketing/.next/

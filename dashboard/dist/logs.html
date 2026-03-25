@@ -1,0 +1,831 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Dialog | Real-time Telemetry</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="5">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="6">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet" vid="7">
+    <style vid="8">
+        :root {
+            
+            --bg-base: #0A0A0F;
+            --bg-panel: #16161C;
+            --bg-glass: rgba(22, 22, 28, 0.65);
+            --bg-glass-hover: rgba(35, 35, 45, 0.8);
+            
+            
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            
+            --text-primary: #F0F0F2;
+            --text-secondary: #8A8A96;
+            --text-tertiary: #555561;
+            
+            
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-highlight: rgba(255, 255, 255, 0.12);
+            
+            
+            --level-debug: #8A8A96;
+            --level-info: #FFFFFF;
+            --level-warn: #F5B83D;
+            --level-error: #E64553;
+            --level-fatal: #FF2A2A;
+            
+            --level-bg-debug: rgba(138, 138, 150, 0.15);
+            --level-bg-info: rgba(255, 255, 255, 0.15);
+            --level-bg-warn: rgba(245, 184, 61, 0.15);
+            --level-bg-error: rgba(230, 69, 83, 0.15);
+            --level-bg-fatal: rgba(255, 42, 42, 0.2);
+
+            
+            --method-get: #42D392;
+            --method-post: #3B82F6;
+            --method-put: #FB923C;
+            --method-del: #EF4444;
+
+            
+            --syntax-key: #A882FF;
+            --syntax-string: #42D392;
+            --syntax-number: #F5B83D;
+            --syntax-keyword: #3B82F6;
+            --syntax-path: #8A8A96;
+            
+            
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 16px;
+            --radius-pill: 99px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        
+        .filter-header {
+            position: relative;
+            z-index: 10;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .filter-island {
+            display: flex;
+            align-items: center;
+            background: var(--bg-glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 6px;
+            gap: 6px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .control-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-pill:hover {
+            background: var(--border-subtle);
+            color: var(--text-primary);
+        }
+
+        .control-pill.active {
+            background: var(--border-highlight);
+            color: var(--text-primary);
+        }
+
+        
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0 12px;
+            height: 32px;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--text-tertiary);
+        }
+
+        .input-wrapper input {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            width: 140px;
+            outline: none;
+        }
+        
+        .input-wrapper input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .input-icon {
+            color: var(--text-tertiary);
+            margin-right: 8px;
+            width: 14px;
+            height: 14px;
+        }
+
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .pulse {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(255, 42, 42, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(255, 42, 42, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 42, 42, 0); }
+        }
+
+        .framework-badge {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #111, #333);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: bold;
+            color: white;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .segmented-control {
+            display: flex;
+            background: var(--bg-panel);
+            padding: 4px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .segment {
+            padding: 4px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .segment.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        
+        .log-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0 24px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+            padding-bottom: 80px; 
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 10px;
+        }
+        .log-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .log-container::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 10px;
+            border: 3px solid var(--bg-base);
+        }
+
+        .log-line {
+            display: flex;
+            align-items: flex-start;
+            padding: 6px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            gap: 16px;
+            position: relative;
+            animation: slideUpFade 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .log-line:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .log-line.error-line {
+            background: linear-gradient(90deg, rgba(230, 69, 83, 0.05) 0%, transparent 100%);
+        }
+        
+        .log-line.error-line::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--level-error);
+        }
+
+        @keyframes slideUpFade {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        
+        .log-meta-col {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            width: 380px; 
+        }
+
+        .l-time {
+            color: var(--text-tertiary);
+            width: 115px;
+            flex-shrink: 0;
+        }
+
+        .l-service {
+            color: #00E5FF;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            background: rgba(0, 229, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            font-size: 11px;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+
+        .l-level {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            width: 60px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        .lvl-dbg { color: var(--level-debug); background: var(--level-bg-debug); }
+        .lvl-inf { color: var(--level-info); background: var(--level-bg-info); }
+        .lvl-wrn { color: var(--level-warn); background: var(--level-bg-warn); }
+        .lvl-err { color: var(--level-error); background: var(--level-bg-error); }
+        .lvl-ftl { color: white; background: var(--level-fatal); animation: fatal-pulse 1.5s infinite; }
+
+        @keyframes fatal-pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .log-content-col {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0; 
+        }
+
+        .l-msg {
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .l-dim { color: var(--text-secondary); }
+
+        
+        .http-details {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            font-size: 12px;
+        }
+
+        .m-get { color: var(--method-get); font-weight: 700; }
+        .m-post { color: var(--method-post); font-weight: 700; }
+        .m-put { color: var(--method-put); font-weight: 700; }
+        .m-del { color: var(--method-del); font-weight: 700; }
+        
+        .status-200 { color: var(--method-get); }
+        .status-400 { color: var(--level-warn); }
+        .status-500 { color: var(--level-error); }
+
+        
+        .render-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-top: 6px;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+
+        
+        .json-block {
+            border-left: 2px solid var(--border-subtle);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+        .j-key { color: var(--syntax-key); }
+        .j-str { color: var(--syntax-string); }
+        .j-num { color: var(--syntax-number); }
+        .j-bool { color: var(--method-post); }
+        .j-bracket { color: var(--text-tertiary); }
+
+        
+        .stack-block {
+            border-left: 2px solid rgba(230, 69, 83, 0.4);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            color: var(--text-secondary);
+        }
+        .s-err { color: var(--level-error); font-weight: bold; margin-bottom: 8px; display: block;}
+        .s-at { color: var(--text-tertiary); }
+        .s-path { color: var(--syntax-path); text-decoration: underline; text-decoration-color: rgba(138, 138, 150, 0.3); text-underline-offset: 3px; }
+        .s-line { color: var(--text-primary); }
+
+        
+        .sql-block {
+            border-left: 2px solid var(--method-post);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+        .sq-kw { color: #A882FF; font-weight: bold; } 
+        .sq-str { color: var(--syntax-string); }
+        .sq-var { color: var(--text-primary); }
+
+        
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 20;
+        }
+
+        
+        .telemetry-module {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .barcode-viz {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 24px;
+            padding-bottom: 2px;
+        }
+
+        .bar {
+            width: 2px;
+            background: var(--text-tertiary);
+            border-radius: 1px;
+            transform-origin: bottom;
+            animation: equalize 1.5s infinite ease-in-out alternate;
+        }
+
+        
+        .bar:nth-child(1) { height: 30%; animation-delay: 0.1s; }
+        .bar:nth-child(2) { height: 60%; animation-delay: 0.3s; }
+        .bar:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+        .bar:nth-child(4) { height: 80%; animation-delay: 0.5s; }
+        .bar:nth-child(5) { height: 50%; animation-delay: 0.4s; }
+        .bar:nth-child(6) { height: 90%; animation-delay: 0.7s; }
+        .bar:nth-child(7) { height: 30%; animation-delay: 0.6s; }
+        .bar:nth-child(8) { height: 70%; animation-delay: 0.8s; }
+        .bar:nth-child(9) { height: 40%; animation-delay: 0.9s; }
+        .bar:nth-child(10) { height: 60%; animation-delay: 1.0s; }
+        .bar:nth-child(11) { height: 80%; animation-delay: 0.2s; }
+        .bar:nth-child(12) { height: 50%; animation-delay: 0.5s; }
+
+        @keyframes equalize {
+            0% { transform: scaleY(0.3); background: var(--text-tertiary); }
+            100% { transform: scaleY(1); background: var(--text-secondary); }
+        }
+
+        
+        .metric-display {
+            font-family: var(--font-sans);
+            font-weight: 300;
+            font-size: 28px;
+            letter-spacing: -1px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .metric-unit {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .log-count {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-tertiary);
+            border-left: 1px solid var(--border-subtle);
+            padding-left: 16px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%; 
+            background: var(--bg-panel);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: var(--border-highlight);
+            color: var(--text-primary);
+        }
+
+        .icon-btn.primary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+        }
+
+        svg {
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+    </style>
+</head>
+<body vid="9">
+    <nav style="background: var(--bg-base); border-bottom: 1px solid var(--border-subtle); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; flex-shrink: 0;" vid="10">
+        <div style="display: flex; align-items: center; gap: 32px;" vid="11">
+            <div style="display: flex; align-items: center; gap: 10px;" vid="12">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-primary);" vid="13">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" vid="14"></path>
+                    <path d="M2 17l10 5 10-5" vid="15"></path>
+                    <path d="M2 12l10 5 10-5" vid="16"></path>
+                </svg>
+                <span style="font-size: 18px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.3px;" vid="17">Dialog</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px;" vid="18">
+                <a href="/" style="padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: transparent; border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; text-decoration: none;">Overview</a>
+                <a href="/logs" style="padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--text-primary); background: rgba(255,255,255,0.08); border: none; border-radius: var(--radius-md); cursor: pointer; text-decoration: none;">Logs</a>
+                <a href="/journeys" style="padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: transparent; border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; text-decoration: none;">Journeys</a>
+                <a href="/errors" style="padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: transparent; border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; text-decoration: none;">Errors</a>
+                <a href="/ask" style="padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: transparent; border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; text-decoration: none;">Ask AI</a>
+                <a href="/deployments" style="padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: transparent; border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; text-decoration: none;">Deploys</a>
+                <a href="/settings" style="padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: transparent; border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; text-decoration: none;">Settings</a>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;" vid="24">
+            <div style="display: flex; align-items: center; background: var(--bg-glass); border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); padding: 0 16px; height: 36px; gap: 10px;" vid="25">
+                <svg width="16" height="16" viewBox="0 0 24 24" style="color: #8B5CF6;" vid="26"><path d="M12 2L9 9l-7 3 7 3 3 7 3-7 7-3-7-3-3-7z" fill="currentColor" vid="27"></path></svg>
+                <input type="text" placeholder="Ask anything about your logs..." onkeydown="if(event.key==='Enter') window.location.href='/ask'" style="background: transparent; border: none; color: var(--text-primary); font-size: 14px; width: 220px; outline: none;" vid="28">
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary);" vid="29">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #42D392;" vid="30"></span>
+                <span vid="31">3 services monitored</span>
+            </div>
+        </div>
+    </nav>
+
+    
+    <header class="filter-header" vid="32">
+        
+        <div class="filter-island" vid="33">
+            
+            <button class="control-pill" vid="34">
+                <div class="framework-badge" vid="35">N</div>
+                core-auth-service
+                <svg width="12" height="12" viewBox="0 0 24 24" vid="36"><path d="M6 9l6 6 6-6" vid="37"></path></svg>
+            </button>
+
+            
+            <button class="control-pill" vid="38">
+                <div class="dot" style="background: var(--level-error)" vid="39"></div>
+                Level
+                <svg width="12" height="12" viewBox="0 0 24 24" vid="40"><path d="M6 9l6 6 6-6" vid="41"></path></svg>
+            </button>
+        </div>
+
+        <div class="filter-island" style="flex-grow: 1; max-width: 600px;" vid="42">
+            
+            <div class="input-wrapper" style="width: auto; flex-grow: 1;" vid="43">
+                <svg class="input-icon" viewBox="0 0 24 24" vid="44"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" vid="45"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" vid="46"></path></svg>
+                <input type="text" placeholder="/api/v2/users..." style="width: 100%;" vid="47">
+            </div>
+
+            
+            <div class="input-wrapper" vid="48">
+                <svg class="input-icon" viewBox="0 0 24 24" vid="49"><circle cx="11" cy="11" r="8" vid="50"></circle><line x1="21" y1="21" x2="16.65" y2="16.65" vid="51"></line></svg>
+                <input type="text" placeholder="Search payload" vid="52">
+            </div>
+        </div>
+
+        <div class="filter-island" vid="53">
+            
+            <div class="segmented-control" vid="54">
+                <div class="segment active" vid="55">
+                    <div class="dot pulse" style="background: #42D392; width: 6px; height: 6px;" vid="56"></div>
+                    Live
+                </div>
+                <div class="segment" vid="57">
+                    <svg width="12" height="12" viewBox="0 0 24 24" vid="58"><circle cx="12" cy="12" r="10" vid="59"></circle><polyline points="12 6 12 12 16 14" vid="60"></polyline></svg>
+                    Hist
+                </div>
+            </div>
+            
+            
+            <button class="control-pill" style="opacity: 0.5;" vid="61">
+                15m
+                <svg width="12" height="12" viewBox="0 0 24 24" vid="62"><path d="M6 9l6 6 6-6" vid="63"></path></svg>
+            </button>
+        </div>
+
+    </header>
+
+    
+    <main class="log-container" vid="64">
+        
+        
+        <div class="log-line" style="animation-delay: 0.1s;" vid="65">
+            <div class="log-meta-col" vid="66">
+                <span class="l-time" vid="67">14:32:01.042</span>
+                <span class="l-service" vid="68">api-gateway</span>
+                <span class="l-level lvl-inf" vid="69">INFO</span>
+            </div>
+            <div class="log-content-col" vid="70">
+                <div class="l-msg" vid="71">
+                    <span class="http-details" vid="72">
+                        <span class="m-get" vid="73">GET</span>
+                        <span vid="74">/v1/workspaces/ws_8x92jn/members</span>
+                        <span class="status-200" vid="75">200</span>
+                    </span>
+                    <span class="l-dim" style="margin-left: 8px;" vid="76">42ms</span>
+                    <span style="margin-left: 8px;" vid="77">Request completed successfully.</span>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="log-line" style="animation-delay: 0.15s;" vid="78">
+            <div class="log-meta-col" vid="79">
+                <span class="l-time" vid="80">14:32:01.108</span>
+                <span class="l-service" vid="81">cache-node-04</span>
+                <span class="l-level lvl-dbg" vid="82">DEBUG</span>
+            </div>
+            <div class="log-content-col" vid="83">
+                <div class="l-msg l-dim" vid="84">Cache hit for key user:usr_9921:permissions. TTL remaining 340s.</div>
+            </div>
+        </div>
+
+        
+        <div class="log-line" style="animation-delay: 0.2s;" vid="85">
+            <div class="log-meta-col" vid="86">
+                <span class="l-time" vid="87">14:32:01.250</span>
+                <span class="l-service" vid="88">db-pool-main</span>
+                <span class="l-level lvl-inf" vid="89">INFO</span>
+            </div>
+            <div class="log-content-col" vid="90">
+                <div class="l-msg" vid="91">Executing prepared statement <span class="l-dim" vid="92">18ms</span></div>
+                <div class="render-block sql-block" vid="93">
+                    <span class="sq-kw" vid="94">SELECT</span> id, email, role, last_login<br vid="95">
+                    <span class="sq-kw" vid="96">FROM</span> users <span class="sq-kw" vid="97">JOIN</span> workspaces <span class="sq-kw" vid="98">ON</span> users.ws_id = workspaces.id<br vid="99">
+                    <span class="sq-kw" vid="100">WHERE</span> workspaces.tenant_id = <span class="sq-str" vid="101">'tnt_prod_x9'</span> <span class="sq-kw" vid="102">AND</span> users.status = <span class="sq-str" vid="103">'ACTIVE'</span><br vid="104">
+                    <span class="sq-kw" vid="105">ORDER BY</span> created_at <span class="sq-kw" vid="106">DESC LIMIT</span> <span class="sq-var" vid="107">50</span>;
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="log-line" style="animation-delay: 0.25s;" vid="108">
+            <div class="log-meta-col" vid="109">
+                <span class="l-time" vid="110">14:32:02.011</span>
+                <span class="l-service" vid="111">billing-worker</span>
+                <span class="l-level lvl-wrn" vid="112">WARN</span>
+            </div>
+            <div class="log-content-col" vid="113">
+                <div class="l-msg" vid="114">
+                    <span class="http-details" vid="115">
+                        <span class="m-post" vid="116">POST</span>
+                        <span vid="117">/webhooks/stripe/payment_intent</span>
+                        <span class="status-400" vid="118">400</span>
+                    </span>
+                    <span class="l-dim" style="margin-left: 8px;" vid="119">124ms</span>
+                    <span style="margin-left: 8px;" vid="120">Rate limit approaching for account. Throttling applied.</span>
+                </div>
+                <div class="render-block json-block" vid="121">
+                    <span class="j-bracket" vid="122">{</span><br vid="123">
+                    &nbsp;&nbsp;<span class="j-key" vid="124">"event_id"</span>: <span class="j-str" vid="125">"evt_3Mwq..."</span>,<br vid="126">
+                    &nbsp;&nbsp;<span class="j-key" vid="127">"type"</span>: <span class="j-str" vid="128">"rate_limit.warning"</span>,<br vid="129">
+                    &nbsp;&nbsp;<span class="j-key" vid="130">"metadata"</span>: <span class="j-bracket" vid="131">{</span><br vid="132">
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="j-key" vid="133">"current_usage"</span>: <span class="j-num" vid="134">9450</span>,<br vid="135">
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="j-key" vid="136">"limit"</span>: <span class="j-num" vid="137">10000</span>,<br vid="138">
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="j-key" vid="139">"enforced"</span>: <span class="j-bool" vid="140">false</span><br vid="141">
+                    &nbsp;&nbsp;<span class="j-bracket" vid="142">}</span><br vid="143">
+                    <span class="j-bracket" vid="144">}</span>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="log-line" style="animation-delay: 0.3s;" vid="145">
+            <div class="log-meta-col" vid="146">
+                <span class="l-time" vid="147">14:32:02.440</span>
+                <span class="l-service" vid="148">user-service</span>
+                <span class="l-level lvl-inf" vid="149">INFO</span>
+            </div>
+            <div class="log-content-col" vid="150">
+                <div class="l-msg" vid="151">
+                    <span class="http-details" vid="152">
+                        <span class="m-del" vid="153">DELETE</span>
+                        <span vid="154">/v1/sessions/sess_aj81mc</span>
+                        <span class="status-200" vid="155">204</span>
+                    </span>
+                    <span class="l-dim" style="margin-left: 8px;" vid="156">12ms</span>
+                    <span style="margin-left: 8px;" vid="157">Session invalidated successfully.</span>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="log-line error-line" style="animation-delay: 0.35s;" vid="158">
+            <div class="log-meta-col" vid="159">
+                <span class="l-time" vid="160">14:32:03.105</span>
+                <span class="l-service" vid="161">core-auth-service</span>
+                <span class="l-level lvl-err" vid="162">ERROR</span>
+            </div>
+            <div class="log-content-col" vid="163">
+                <div class="l-msg" vid="164">
+                    <span class="http-details" vid="165">
+                        <span class="m-put" vid="166">PUT</span>
+                        <span vid="167">/v2/organizations/org_99x/settings</span>
+                        <span class="status-500" vid="168">500</span>
+                    </span>
+                    <span class="l-dim" style="margin-left: 8px;" vid="169">850ms</span>
+                    <span style="margin-left: 8px; color: var(--level-error);" vid="170">Unhandled Promise Rejection: Deadlock found when trying to get lock</span>
+                </div>
+                <div class="render-block stack-block" vid="171">
+                    <span class="s-err" vid="172">QueryFailedError: ER_LOCK_DEADLOCK: Deadlock found when trying to get lock; try restarting transaction</span>
+                    <span class="s-at" vid="173">at</span> Query.run (<span class="s-path" vid="174">/app/node_modules/mysql2/lib/commands/query.js</span>:<span class="s-line" vid="175">185:19</span>)<br vid="176">
+                    <span class="s-at" vid="177">at</span> Connection.query (<span class="s-path" vid="178">/app/node_modules/mysql2/lib/connection.js</span>:<span class="s-line" vid="179">498:17</span>)<br vid="180">
+                    <span class="s-at" vid="181">at</span> TransactionManager.execute (<span class="s-path" vid="182">/app/src/db/transaction.ts</span>:<span class="s-line" vid="183">42:12</span>)<br vid="184">
+                    <span class="s-at" vid="185">at</span> OrganizationService.updateSettings (<span class="s-path" vid="186">/app/src/services/org.service.ts</span>:<span class="s-line" vid="187">214:8</span>)<br vid="188">
+                    <span class="s-at" vid="189">at</span> processTicksAndRejections (<span class="s-path" vid="190">node:internal/process/task_queues</span>:<span class="s-line" vid="191">96:5</span>)
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="log-line" style="animation-delay: 0.4s;" vid="192">
+            <div class="log-meta-col" vid="193">
+                <span class="l-time" vid="194">14:32:03.112</span>
+                <span class="l-service" vid="195">system-monitor</span>
+                <span class="l-level lvl-ftl" vid="196">FATAL</span>
+            </div>
+            <div class="log-content-col" vid="197">
+                <div class="l-msg" style="color: var(--level-fatal); font-weight: 500;" vid="198">OOM Killer triggered. Worker process [pid: 4092] terminated. Memory limits exceeded in pod auth-service-deployment-8x9.</div>
+            </div>
+        </div>
+        
+        
+        <div class="log-line" style="animation-delay: 0.45s;" vid="199">
+            <div class="log-meta-col" vid="200">
+                <span class="l-time" vid="201">14:32:03.500</span>
+                <span class="l-service" vid="202">api-gateway</span>
+                <span class="l-level lvl-inf" vid="203">INFO</span>
+            </div>
+            <div class="log-content-col" vid="204"><div class="l-msg" vid="205">Routing request to upstream ws-cluster-b.</div></div>
+        </div>
+        <div class="log-line" style="animation-delay: 0.5s;" vid="206">
+            <div class="log-meta-col" vid="207">
+                <span class="l-time" vid="208">14:32:03.551</span>
+                <span class="l-service" vid="209">search-index</span>
+                <span class="l-level lvl-dbg" vid="210">DEBUG</span>
+            </div>
+            <div class="log-content-col" vid="211"><div class="l-msg l-dim" vid="212">Flushing index buffer. 450 documents synced.</div></div>
+        </div>
+
+    </main>
+
+    
+    <footer class="status-bar" vid="213">
+        
+        <div class="telemetry-module" vid="214">
+            
+            <div class="barcode-viz" vid="215">
+                <div class="bar" vid="216"></div><div class="bar" vid="217"></div><div class="bar" vid="218"></div><div class="bar" vid="219"></div>
+                <div class="bar" vid="220"></div><div class="bar" vid="221"></div><div class="bar" vid="222"></div><div class="bar" vid="223"></div>
+                <div class="bar" vid="224"></div><div class="bar" vid="225"></div><div class="bar" vid="226"></div><div class="bar" vid="227"></div>
+            </div>
+            
+            
+            <div class="metric-display" vid="228">
+                124 <span class="metric-unit" vid="229">logs/s</span>
+            </div>
+
+            <div class="log-count" vid="230">
+                Total: 1,492,051
+            </div>
+        </div>
+
+        <div class="status-controls" vid="231">
+            
+            <button class="icon-btn" title="Jump to Latest" vid="232">
+                <svg width="18" height="18" viewBox="0 0 24 24" vid="233"><path d="M12 5v14M19 12l-7 7-7-7" vid="234"></path></svg>
+            </button>
+            
+            <button class="icon-btn" title="Export Logs" vid="235">
+                <svg width="18" height="18" viewBox="0 0 24 24" vid="236"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" vid="237"></path><polyline points="7 10 12 15 17 10" vid="238"></polyline><line x1="12" y1="15" x2="12" y2="3" vid="239"></line></svg>
+            </button>
+            
+            <button class="icon-btn primary" title="Pause Stream" style="margin-left: 8px;" vid="240">
+                <svg width="16" height="16" viewBox="0 0 24 24" vid="241"><rect x="6" y="4" width="4" height="16" vid="242"></rect><rect x="14" y="4" width="4" height="16" vid="243"></rect></svg>
+            </button>
+        </div>
+
+    </footer>
+
+
+</body></html>

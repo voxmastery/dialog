@@ -1,0 +1,341 @@
+<html lang="en" class="dark" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Dialog | Deployment Comparison</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17" vid="5"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet" vid="6">
+    <script vid="7">
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        dialogbg: '#0A0A0F',
+                        dialogpanel: 'rgba(255, 255, 255, 0.02)',
+                        dialogborder: 'rgba(255, 255, 255, 0.06)',
+                        dialoghover: 'rgba(255, 255, 255, 0.04)',
+                        deployBefore: '#3B82F6',
+                        deployAfter: '#A855F7',
+                    }
+                }
+            }
+        }
+    </script>
+    <style vid="8">
+        body { background-color: #0A0A0F; color: #E5E7EB; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(16px);
+        }
+        .ambient-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .timeline-track {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.15) 45%, rgba(168, 85, 247, 0.15) 55%, rgba(168, 85, 247, 0.15) 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen relative font-sans antialiased w-full flex flex-col" vid="9">
+
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-[-1]" vid="10">
+        <div class="ambient-glow top-[-10%] right-[-10%] w-[40vw] h-[40vh] bg-rose-900/10" vid="11"></div>
+        <div class="ambient-glow bottom-[-10%] left-[-10%] w-[40vw] h-[40vh] bg-indigo-900/10" vid="12"></div>
+    </div>
+
+    <header class="sticky top-0 z-50 backdrop-blur-xl border-b border-white/[0.06] bg-[#0A0A0F]/80" vid="13">
+        <div class="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between" vid="14">
+            <div class="flex items-center gap-10" vid="15">
+                <a href="/" class="flex items-center gap-2" vid="16">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" vid="17">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" stroke-width="2" stroke-linejoin="round" vid="18"></path>
+                        <path d="M2 17L12 22L22 17" stroke="white" stroke-opacity="0.3" stroke-width="2" stroke-linejoin="round" vid="19"></path>
+                        <path d="M2 12L12 17L22 12" stroke="white" stroke-opacity="0.6" stroke-width="2" stroke-linejoin="round" vid="20"></path>
+                    </svg>
+                    <span class="text-white font-semibold tracking-tight text-lg" vid="21">Dialog</span>
+                </a>
+                <nav class="hidden md:flex items-center gap-6" vid="22">
+                    <a href="/"  class="text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors">Overview</a>
+                    <a href="/logs"  class="text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors">Logs</a>
+                    <a href="/journeys"  class="text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors">Journeys</a>
+                    <a href="/errors"  class="text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors">Errors</a>
+                    <a href="/ask"  class="text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors">Ask AI</a>
+                    <a href="/deployments"  class="text-sm font-medium text-white px-1 py-1 border-b-2 border-indigo-500">Deploys</a>
+                    <a href="/settings"  class="text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors">Settings</a>
+                </nav>
+            </div>
+            <div class="flex items-center gap-6" vid="29">
+                <div class="relative w-80 group" vid="30">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" vid="31">
+                        <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" vid="32">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" vid="33"></path>
+                        </svg>
+                    </div>
+                    <input type="text" onkeydown="if(event.key==='Enter') window.location.href='/ask'" class="block w-full pl-10 pr-3 py-1.5 border border-white/10 rounded-md bg-white/[0.03] text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 sm:text-sm transition-all" placeholder="Ask anything about your logs..." vid="34">
+                </div>
+                <div class="flex items-center gap-2 bg-white/[0.03] border border-white/[0.05] px-3 py-1.5 rounded-full" vid="35">
+                    <span class="relative flex h-2.5 w-2.5" vid="36">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" vid="37"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" vid="38"></span>
+                    </span>
+                    <span class="text-xs font-medium text-gray-300" vid="39">3 services monitored</span>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-medium" vid="40">JD</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-[1400px] mx-auto px-6 py-8 flex flex-col gap-6" vid="41">
+        
+        <div class="glass-card rounded-xl p-6 flex flex-col gap-6" vid="42">
+            <div class="flex justify-between items-center" vid="43">
+                <div class="flex items-center gap-4" vid="44">
+                    <h2 class="text-lg font-semibold text-white" vid="45">Deployment Comparison</h2>
+                    <div class="flex gap-1" vid="46">
+                        <button class="px-3 py-1.5 text-xs font-medium bg-white/10 text-white rounded-md" vid="47">Last deploy</button>
+                        <button class="px-3 py-1.5 text-xs font-medium text-gray-400 hover:bg-white/5 rounded-md" vid="48">1h before / 1h after</button>
+                        <button class="px-3 py-1.5 text-xs font-medium text-gray-400 hover:bg-white/5 rounded-md" vid="49">Custom</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2" vid="50">
+                    <span class="text-xs text-gray-500" vid="51">Service:</span>
+                    <select class="bg-white/5 border border-white/10 text-xs text-gray-300 rounded px-3 py-1.5 outline-none" vid="52">
+                        <option vid="53">All Services</option>
+                        <option vid="54">api-gateway</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="relative pt-8 pb-4 px-4" vid="55">
+                <div class="h-10 w-full rounded-lg timeline-track relative border border-white/5 overflow-hidden" vid="56">
+                    
+                    <div class="absolute inset-y-0 left-0 w-[45%] bg-blue-500/10 border-r border-blue-500/30" vid="57"></div>
+                    
+                    <div class="absolute inset-y-0 right-0 w-[45%] bg-purple-500/10 border-l border-purple-500/30" vid="58"></div>
+                    
+                    <div class="absolute inset-y-0 left-1/2 w-px border-l-2 border-dashed border-white/40 z-10 flex flex-col items-center" vid="59">
+                        <div class="absolute -top-7 bg-white/10 p-1 rounded border border-white/20" vid="60">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" vid="61">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" vid="62"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute inset-x-0 bottom-0 flex justify-between px-2 text-[10px] text-gray-600 font-mono" vid="63">
+                        <span vid="64">14:00</span><span vid="65">16:00</span><span vid="66">18:00 (Deploy)</span><span vid="67">20:00</span><span vid="68">22:00</span>
+                    </div>
+                </div>
+                
+                <div class="absolute top-4 left-[45%] -ml-3 cursor-grab flex flex-col items-center" vid="69">
+                    <div class="text-[10px] font-bold text-blue-400 mb-1" vid="70">BEFORE</div>
+                    <div class="w-6 h-6 rounded-full bg-blue-500 border-2 border-white shadow-lg flex items-center justify-center" vid="71">
+                        <div class="w-1 h-3 bg-white/50 rounded-full" vid="72"></div>
+                    </div>
+                </div>
+                <div class="absolute top-4 left-[55%] -ml-3 cursor-grab flex flex-col items-center" vid="73">
+                    <div class="text-[10px] font-bold text-purple-400 mb-1" vid="74">AFTER</div>
+                    <div class="w-6 h-6 rounded-full bg-purple-500 border-2 border-white shadow-lg flex items-center justify-center" vid="75">
+                        <div class="w-1 h-3 bg-white/50 rounded-full" vid="76"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="w-full bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 flex items-center gap-4 relative overflow-hidden" vid="77">
+            <div class="absolute inset-0 bg-gradient-to-r from-rose-500/5 to-transparent" vid="78"></div>
+            <div class="w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center shrink-0 border border-rose-500/40" vid="79">
+                <svg class="w-6 h-6 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" vid="80">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" vid="81"></path>
+                </svg>
+            </div>
+            <div vid="82">
+                <h3 class="text-rose-500 font-bold text-lg leading-none" vid="83">DEGRADED</h3>
+                <p class="text-rose-200/70 text-sm mt-1 font-medium" vid="84">Error rate increased 340%, 3 new errors detected after deployment v2.4.12</p>
+            </div>
+        </div>
+
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" vid="85">
+            <div class="glass-card rounded-xl p-5 relative overflow-hidden" vid="86">
+                <div class="flex justify-between items-start mb-4" vid="87">
+                    <span class="text-sm font-medium text-gray-400" vid="88">Error Rate</span>
+                    <span class="text-xs font-bold text-rose-500 flex items-center gap-0.5" vid="89">↑ 300% <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" vid="90"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7 7 7M12 3v18" vid="91"></path></svg></span>
+                </div>
+                <div class="flex items-end justify-between" vid="92">
+                    <div class="space-y-1" vid="93">
+                        <div class="flex items-center gap-2" vid="94"><div class="w-1.5 h-1.5 rounded-full bg-blue-500" vid="95"></div><span class="text-sm text-gray-500" vid="96">Before:</span><span class="text-lg font-semibold text-blue-400" vid="97">1.2%</span></div>
+                        <div class="flex items-center gap-2" vid="98"><div class="w-1.5 h-1.5 rounded-full bg-rose-500" vid="99"></div><span class="text-sm text-gray-500" vid="100">After:</span><span class="text-2xl font-bold text-rose-500" vid="101">4.8%</span></div>
+                    </div>
+                    <div class="w-24 h-12 opacity-30" vid="102">
+                        <svg viewBox="0 0 100 40" class="w-full h-full" vid="103"><path d="M0 35 L30 32 L60 38 L100 5" fill="none" stroke="#F43F5E" stroke-width="3" stroke-linecap="round" vid="104"></path></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-xl p-5 relative overflow-hidden" vid="105">
+                <div class="flex justify-between items-start mb-4" vid="106">
+                    <span class="text-sm font-medium text-gray-400" vid="107">Avg Latency</span>
+                    <span class="text-xs font-bold text-amber-500 flex items-center gap-0.5" vid="108">↑ 49% <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" vid="109"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7 7 7M12 3v18" vid="110"></path></svg></span>
+                </div>
+                <div class="flex items-end justify-between" vid="111">
+                    <div class="space-y-1" vid="112">
+                        <div class="flex items-center gap-2" vid="113"><div class="w-1.5 h-1.5 rounded-full bg-blue-500" vid="114"></div><span class="text-sm text-gray-500" vid="115">Before:</span><span class="text-lg font-semibold text-blue-400" vid="116">45ms</span></div>
+                        <div class="flex items-center gap-2" vid="117"><div class="w-1.5 h-1.5 rounded-full bg-amber-500" vid="118"></div><span class="text-sm text-gray-500" vid="119">After:</span><span class="text-2xl font-bold text-amber-500" vid="120">67ms</span></div>
+                    </div>
+                    <div class="w-24 h-12 opacity-30" vid="121">
+                        <svg viewBox="0 0 100 40" class="w-full h-full" vid="122"><path d="M0 30 L30 28 L60 20 L100 5" fill="none" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" vid="123"></path></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-xl p-5 relative overflow-hidden" vid="124">
+                <div class="flex justify-between items-start mb-4" vid="125">
+                    <span class="text-sm font-medium text-gray-400" vid="126">Request Volume</span>
+                    <span class="text-xs font-bold text-gray-500 flex items-center gap-0.5" vid="127">↓ 12% <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" vid="128"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 14l-7 7-7-7M12 21V3" vid="129"></path></svg></span>
+                </div>
+                <div class="flex items-end justify-between" vid="130">
+                    <div class="space-y-1" vid="131">
+                        <div class="flex items-center gap-2" vid="132"><div class="w-1.5 h-1.5 rounded-full bg-blue-500" vid="133"></div><span class="text-sm text-gray-500" vid="134">Before:</span><span class="text-lg font-semibold text-blue-400" vid="135">1,247</span></div>
+                        <div class="flex items-center gap-2" vid="136"><div class="w-1.5 h-1.5 rounded-full bg-white" vid="137"></div><span class="text-sm text-gray-500" vid="138">After:</span><span class="text-2xl font-bold text-white" vid="139">1,103</span></div>
+                    </div>
+                    <div class="w-24 h-12 opacity-20" vid="140">
+                        <svg viewBox="0 0 100 40" class="w-full h-full" vid="141"><path d="M0 10 L30 15 L60 12 L100 25" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" vid="142"></path></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" vid="143">
+            
+            <div class="glass-card rounded-xl overflow-hidden flex flex-col" vid="144">
+                <div class="px-5 py-4 bg-rose-500/10 border-b border-rose-500/20 flex items-center justify-between" vid="145">
+                    <div class="flex items-center gap-2" vid="146">
+                        <div class="w-2 h-4 bg-rose-500 rounded-sm" vid="147"></div>
+                        <h3 class="font-semibold text-white" vid="148">New Errors</h3>
+                    </div>
+                    <span class="text-xs font-bold text-rose-500 px-2 py-1 bg-rose-500/20 rounded" vid="149">3 New Types</span>
+                </div>
+                <div class="p-2 flex flex-col gap-1" vid="150">
+                    <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-white/[0.04] group cursor-pointer border border-transparent hover:border-rose-500/10 transition-all" vid="151">
+                        <div class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" vid="152"></div>
+                        <div class="flex-1 min-w-0" vid="153">
+                            <p class="text-[13px] font-mono text-gray-200 truncate group-hover:text-white transition-colors" vid="154">ETIMEDOUT connecting to stripe.com:443</p>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0" vid="155">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500 text-white" vid="156">NEW</span>
+                            <span class="text-xs font-mono text-gray-400" vid="157">12x</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-white/[0.04] group cursor-pointer border border-transparent hover:border-rose-500/10 transition-all" vid="158">
+                        <div class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" vid="159"></div>
+                        <div class="flex-1 min-w-0" vid="160">
+                            <p class="text-[13px] font-mono text-gray-200 truncate group-hover:text-white transition-colors" vid="161">TypeError: Cannot read properties of null (reading 'id')</p>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0" vid="162">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500 text-white" vid="163">NEW</span>
+                            <span class="text-xs font-mono text-gray-400" vid="164">8x</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-white/[0.04] group cursor-pointer border border-transparent hover:border-rose-500/10 transition-all" vid="165">
+                        <div class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" vid="166"></div>
+                        <div class="flex-1 min-w-0" vid="167">
+                            <p class="text-[13px] font-mono text-gray-200 truncate group-hover:text-white transition-colors" vid="168">RedisError: MISCONF Redis is configured to save RDB snapshots</p>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0" vid="169">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500 text-white" vid="170">NEW</span>
+                            <span class="text-xs font-mono text-gray-400" vid="171">3x</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="glass-card rounded-xl overflow-hidden flex flex-col" vid="172">
+                <div class="px-5 py-4 bg-emerald-500/10 border-b border-emerald-500/20 flex items-center justify-between" vid="173">
+                    <div class="flex items-center gap-2" vid="174">
+                        <div class="w-2 h-4 bg-emerald-500 rounded-sm" vid="175"></div>
+                        <h3 class="font-semibold text-white" vid="176">Resolved Errors</h3>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-500 px-2 py-1 bg-emerald-500/20 rounded" vid="177">1 Fixed</span>
+                </div>
+                <div class="p-2 flex flex-col gap-1" vid="178">
+                    <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-white/[0.04] group cursor-pointer border border-transparent hover:border-emerald-500/10 transition-all" vid="179">
+                        <div class="w-4 h-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center" vid="180">
+                            <svg class="w-2.5 h-2.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" vid="181"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" vid="182"></path></svg>
+                        </div>
+                        <div class="flex-1 min-w-0" vid="183">
+                            <p class="text-[13px] font-mono text-gray-400 truncate group-hover:text-gray-200 transition-colors" vid="184">ECONNREFUSED 127.0.0.1:6379</p>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0" vid="185">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase" vid="186">Resolved</span>
+                            <span class="text-xs font-mono text-gray-500" vid="187">Was 7x</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="glass-card rounded-xl p-6 flex flex-col" vid="188">
+            <h3 class="text-base font-semibold text-white mb-6" vid="189">Latency Distribution Comparison</h3>
+            <div class="relative flex-1 min-h-[280px]" vid="190">
+                
+                <svg viewBox="0 0 1000 300" class="w-full h-[240px]" preserveAspectRatio="none" vid="191">
+                    
+                    <path d="M0 300 Q100 280 150 150 T250 80 T350 200 T500 280 T1000 300" fill="rgba(59, 130, 246, 0.15)" stroke="#3B82F6" stroke-width="2" vid="192"></path>
+                    
+                    <path d="M0 300 Q100 290 150 180 T250 120 T350 100 T500 150 T700 220 T1000 300" fill="rgba(168, 85, 247, 0.15)" stroke="#A855F7" stroke-width="2" vid="193"></path>
+                    
+                    
+                    <g class="font-mono text-[10px] fill-gray-500" vid="194">
+                        <line x1="200" y1="0" x2="200" y2="300" stroke="rgba(255,255,255,0.1)" stroke-dasharray="4" vid="195"></line>
+                        <text x="205" y="15" vid="196">p50: 42ms</text>
+                        
+                        <line x1="550" y1="0" x2="550" y2="300" stroke="rgba(244,63,94,0.4)" stroke-dasharray="4" stroke-width="1.5" vid="197"></line>
+                        <text x="555" y="15" class="fill-rose-400" vid="198">p95: 185ms (NEW)</text>
+                        
+                        <line x1="850" y1="0" x2="850" y2="300" stroke="rgba(255,255,255,0.1)" stroke-dasharray="4" vid="199"></line>
+                        <text x="855" y="15" vid="200">p99: 450ms</text>
+                    </g>
+
+                    
+                    <path d="M480 300 L480 230 Q600 150 700 220 T1000 300 Z" fill="rgba(244, 63, 94, 0.1)" vid="201"></path>
+                </svg>
+                
+                
+                <div class="flex justify-between mt-4 text-[11px] font-mono text-gray-500 border-t border-white/5 pt-3" vid="202">
+                    <span vid="203">0ms</span>
+                    <span vid="204">100ms</span>
+                    <span vid="205">200ms</span>
+                    <span vid="206">300ms</span>
+                    <span vid="207">400ms</span>
+                    <span vid="208">500ms+</span>
+                </div>
+                
+                <div class="flex items-center gap-6 mt-6 justify-center" vid="209">
+                    <div class="flex items-center gap-2" vid="210">
+                        <div class="w-3 h-3 rounded bg-blue-500" vid="211"></div>
+                        <span class="text-xs text-gray-400" vid="212">Before Deployment</span>
+                    </div>
+                    <div class="flex items-center gap-2" vid="213">
+                        <div class="w-3 h-3 rounded bg-purple-500" vid="214"></div>
+                        <span class="text-xs text-gray-400" vid="215">After Deployment</span>
+                    </div>
+                    <div class="flex items-center gap-2" vid="216">
+                        <div class="w-3 h-3 rounded bg-rose-500/40" vid="217"></div>
+                        <span class="text-xs text-rose-400" vid="218">Latency Degradation</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body></html>

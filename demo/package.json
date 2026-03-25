@@ -1,0 +1,14 @@
+{
+  "name": "dialog-demo",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js",
+    "traffic": "node traffic.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "morgan": "^1.10.0",
+    "jsonwebtoken": "^9.0.0"
+  }
+}

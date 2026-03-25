@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0A0A0F;
+  color: #E5E7EB;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-y: scroll;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: all 0.2s ease;
+  }
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .glass-chip {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+  }
+  .glass-chip:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+  }
+  .input-glass {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s;
+  }
+  .input-glass:focus {
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    outline: none;
+  }
+  .ambient-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .ai-gradient-text {
+    background: linear-gradient(to right, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .message-bubble-user {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  }
+  .code-block {
+    background: #111118;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .ai-border {
+    border-left: 3px solid transparent;
+    border-image: linear-gradient(to bottom, #818cf8, #c084fc) 1;
+  }
+}
+
+/* Log level colors as CSS vars for dynamic use */
+:root {
+  --bg-base: #0A0A0F;
+  --bg-panel: #16161C;
+  --bg-glass: rgba(22, 22, 28, 0.65);
+  --bg-glass-hover: rgba(35, 35, 45, 0.8);
+  --text-primary: #F0F0F2;
+  --text-secondary: #8A8A96;
+  --text-tertiary: #555561;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-highlight: rgba(255, 255, 255, 0.12);
+  --level-debug: #8A8A96;
+  --level-info: #FFFFFF;
+  --level-warn: #F5B83D;
+  --level-error: #E64553;
+  --level-fatal: #FF2A2A;
+  --level-bg-debug: rgba(138, 138, 150, 0.15);
+  --level-bg-info: rgba(255, 255, 255, 0.15);
+  --level-bg-warn: rgba(245, 184, 61, 0.15);
+  --level-bg-error: rgba(230, 69, 83, 0.15);
+  --level-bg-fatal: rgba(255, 42, 42, 0.2);
+  --method-get: #42D392;
+  --method-post: #3B82F6;
+  --method-put: #FB923C;
+  --method-del: #EF4444;
+  --syntax-key: #A882FF;
+  --syntax-string: #42D392;
+  --syntax-number: #F5B83D;
+}
+
+/* Log level badge styles */
+.lvl-dbg { color: var(--level-debug); background: var(--level-bg-debug); }
+.lvl-inf { color: var(--level-info); background: var(--level-bg-info); }
+.lvl-wrn { color: var(--level-warn); background: var(--level-bg-warn); }
+.lvl-err { color: var(--level-error); background: var(--level-bg-error); }
+.lvl-ftl { color: white; background: var(--level-fatal); animation: fatal-pulse 1.5s infinite; }
+
+@keyframes fatal-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* HTTP method styles */
+.m-get { color: var(--method-get); font-weight: 700; }
+.m-post { color: var(--method-post); font-weight: 700; }
+.m-put { color: var(--method-put); font-weight: 700; }
+.m-del { color: var(--method-del); font-weight: 700; }
+
+/* HTTP status styles */
+.status-200 { color: var(--method-get); }
+.status-400 { color: var(--level-warn); }
+.status-500 { color: var(--level-error); }
+
+/* Log line slide-up animation */
+@keyframes slideUpFade {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Barcode equalizer animation */
+@keyframes equalize {
+  0% { transform: scaleY(0.3); background: var(--text-tertiary); }
+  100% { transform: scaleY(1); background: var(--text-secondary); }
+}
+
+/* Pulse ring for live indicator */
+.pulse {
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(66, 211, 146, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(66, 211, 146, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(66, 211, 146, 0); }
+}
+
+/* Heatmap cell hover */
+.heat-cell {
+  transition: transform 0.1s ease, filter 0.2s ease;
+}
+.heat-cell:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  z-index: 10;
+}
+
+/* Tooltip hover */
+.has-tooltip { position: relative; }
+.tooltip {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+.has-tooltip:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}

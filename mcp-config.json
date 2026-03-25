@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "dialog": {
+      "command": "dialog-cli",
+      "args": ["mcp-serve"],
+      "env": {
+        "DIALOG_MISTRAL_KEY": "zjh3pr2I8XM9OuFNG0j7FScomnsJcF4u"
+      }
+    }
+  }
+}
