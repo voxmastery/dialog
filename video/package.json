@@ -1,0 +1,22 @@
+{
+  "name": "dialog-demo-video",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion render DemoVideo out/demo.mp4 --codec=h264",
+    "build:webm": "remotion render DemoVideo out/demo.webm --codec=vp9",
+    "build:all": "npm run build && npm run build:webm"
+  },
+  "dependencies": {
+    "remotion": "^4.0.0",
+    "@remotion/cli": "^4.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/react": "^19.1.8"
+  }
+}

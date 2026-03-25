@@ -10,6 +10,7 @@ import { registerConfigCommand } from './commands/config.js';
 import { registerExportCommand } from './commands/export.js';
 import { registerAttachCommand } from './commands/attach.js';
 import { registerMcpServeCommand } from './commands/mcp-serve.js';
+import { registerSeedCommand } from './commands/seed.js';
 
 export function registerCommands(program: Command): void {
   registerStartCommand(program);
@@ -23,4 +24,5 @@ export function registerCommands(program: Command): void {
   registerExportCommand(program);
   registerAttachCommand(program);
   registerMcpServeCommand(program);
+  registerSeedCommand(program);
 }
